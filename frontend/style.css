@@ -1,0 +1,97 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #111;
+    color: #fff;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    padding: 20px;
+    background: #000;
+    border-bottom: 1px solid #333;
+}
+
+.logo {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.menu a {
+    margin-left: 15px;
+    color: #bbb;
+    text-decoration: none;
+}
+
+.menu a:hover {
+    color: #fff;
+}
+
+.container {
+    padding: 20px;
+}
+
+.race-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+}
+
+.race-card {
+    padding: 20px;
+    border: 1px solid #333;
+    border-radius: 8px;
+    background: #1c1c1c;
+    cursor: pointer;
+}
+
+.race-card:hover {
+    border-color: #00aaff;
+}
+
+.race-title {
+    font-size: 18px;
+    margin-bottom: 6px;
+}
+
+.race-info {
+    font-size: 13px;
+    color: #ccc;
+}
+
+.horse-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.horse-table th,
+.horse-table td {
+    padding: 10px;
+    border: 1px solid #333;
+    text-align: center;
+}
+
+.form-container {
+    margin: 80px auto;
+    width: 320px;
+    padding: 30px;
+    background: #222;
+    border-radius: 10px;
+    box-sizing: border-box;
+}
+
+.form-container input {
+    width: 100%;
+    margin: 10px 0;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+.form-container button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    cursor: pointer;
+}

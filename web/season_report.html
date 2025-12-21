@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>Season Report</title>
+<style>
+body{background:#111;color:#eee;font-family:sans-serif;padding:20px}
+.card{background:#1c1c1c;border:1px solid #333;border-radius:8px;padding:14px;margin-bottom:12px}
+table{width:100%;border-collapse:collapse}
+th,td{padding:8px;border-bottom:1px solid #333}
+th{background:#222}
+</style>
+</head>
+<body>
+
+<h1>시즌 성과 리포트</h1>
+<div class="card" id="summary"></div>
+
+<h2>Preset</h2>
+<table><thead><tr><th>Preset</th><th>Pred</th><th>Hit</th><th>Rate</th></tr></thead>
+<tbody id="presets"></tbody></table>
+
+<h2>Model × Preset (Top)</h2>
+<table><thead><tr><th>Model</th><th>Preset</th><th>Pred</th><th>Hit</th><th>Rate</th></tr></thead>
+<tbody id="combos"></tbody></table>
+
+<script>
+async function load(){
+  const r = await fetch("/api/season/report/latest");
+  const d = await r.json();
+  const rep = d.report;
+  if(!rep){
+    document.getElementById("summary").innerHTML="아직 커밋된 시즌 리포트가 없습니다";
+    return;
+  }
+  const s = rep.summary;
+  document.getElementById("summary").innerHTML = `
+    <div>Best Combo: ${s.best_combo? (s.best_combo.model+"×"+s.best_combo.preset):"-"}</div>
+    <div>Avg Rate(20+): ${(s.avg_combo_rate_20plus*100).toFixed(1)}%</div>
+    <div>Locked: ${s.locked}</div>
+  `;
+
+  const pbody = document.getElementById("presets");
+  pbody.innerHTML="";
+  rep.presets.forEach(x=>{
+    pbody.innerHTML += `<tr><td>${x.preset}</td><td>${x.pred}</td><td>${x.hit}</td><td>${(x.rate*100).toFixed(1)}%</td></tr>`;
+  });
+
+  const cbody = document.getElementById("combos");
+  cbody.innerHTML="";
+  rep.combos.slice(0,12).forEach(x=>{
+    cbody.innerHTML += `<tr><td>${x.model}</td><td>${x.preset}</td><td>${x.pred}</td><td>${x.hit}</td><td>${(x.rate*100).toFixed(1)}%</td></tr>`;
+  });
+}
+load();
+setInterval(load,5000);
+</script>
+</body>
+</html>

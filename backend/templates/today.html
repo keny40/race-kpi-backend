@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>오늘의 경주</title>
+    <style>
+        body {
+            background: #f4f6f8;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        h1 {
+            font-size: 26px;
+            margin-bottom: 20px;
+            color: #222;
+        }
+        .race-box {
+            background: #fff;
+            padding: 16px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 2px 6px rgba(0,0,0,0.1);
+        }
+        .race-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #0074ff;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 6px;
+            font-size: 15px;
+        }
+        th, td {
+            padding: 6px 8px;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background: #f0f3f5;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<h1>오늘의 경주 목록</h1>
+
+{% if races|length == 0 %}
+<p>오늘의 경주 정보가 없습니다.</p>
+{% endif %}
+
+{% for race in races %}
+<div class="race-box">
+    <div class="race-title">
+        {{ race.race_date }} — {{ race.title }}
+    </div>
+
+    <table>
+        <thead>
+        <tr>
+            <th>순위</th>
+            <th>마번</th>
+            <th>마명</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for h in race.horses %}
+        <tr>
+            <td>{{ h["순위"] }}</td>
+            <td>{{ h["마번"] }}</td>
+            <td>{{ h["마명"] }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endfor %}
+
+</body>
+</html>

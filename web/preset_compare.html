@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>Preset Compare</title>
+<style>
+body{background:#111;color:#eee;font-family:sans-serif;padding:20px}
+table{width:100%;border-collapse:collapse}
+th,td{padding:8px;border-bottom:1px solid #333}
+th{background:#222}
+</style>
+</head>
+<body>
+
+<h1>프리셋 성능 비교</h1>
+
+<table>
+<thead>
+<tr>
+  <th>Preset</th>
+  <th>Pred</th>
+  <th>Hit</th>
+  <th>Hit Rate</th>
+</tr>
+</thead>
+<tbody id="body"></tbody>
+</table>
+
+<script>
+async function load(){
+  const r = await fetch("/api/metrics/timeline?limit=1000");
+  const d = await r.json();
+
+  const stat = {};
+  d.items.forEach(i=>{
+    if(i.type==="predict"){
+      const p=i.payload.preset_used||"A";
+      if(!stat[p]) stat[p]={pred:0,hit:0};
+      stat[p].pred++;
+    }
+    if(i.type==="feedback"){
+      const p=i.payload.preset_used||"A";
+      if(stat[p] && i.payload.hit) stat[p].hit++;
+    }
+  });
+
+  const body=document.getElementById("body");
+  body.innerHTML="";
+  Object.entries(stat).forEach(([k,v)=>{
+    const rate=v.pred?((v.hit/v.pred)*100).toFixed(1):"0";
+    body.innerHTML+=`<tr>
+      <td>${k}</td><td>${v.pred}</td><td>${v.hit}</td><td>${rate}%</td>
+    </tr>`;
+  });
+}
+load();
+setInterval(load,5000);
+</script>
+
+</body>
+</html>

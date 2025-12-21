@@ -1,0 +1,15 @@
+<button id="predictBtn">예측하기</button>
+<pre id="result"></pre>
+
+<script type="module">
+import { predictRace } from "./services/api.js";
+
+document.getElementById("predictBtn").onclick = async () => {
+  const raceId = 2024113005;
+  const horses = [1,2,3,4];
+
+  const result = await predictRace(raceId, horses);
+  document.getElementById("result").textContent =
+    JSON.stringify(result, null, 2);
+};
+</script>

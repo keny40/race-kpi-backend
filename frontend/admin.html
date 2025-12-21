@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>관리자</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="header">
+    <div class="logo">ADMIN PANEL</div>
+    <div class="menu">
+        <a href="index.html">경주목록</a>
+    </div>
+</div>
+
+<div class="container">
+    <h1>승인 대기중인 유저</h1>
+
+    <table class="horse-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>이름</th>
+                <th>이메일</th>
+                <th>승인</th>
+            </tr>
+        </thead>
+        <tbody id="pendingUsers">
+            <!-- JS에서 채움 -->
+        </tbody>
+    </table>
+</div>
+
+<script src="app.js"></script>
+<script>
+    loadPendingUsers();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Admin Control</title>
+<style>
+body { font-family: sans-serif; background:#111; color:#eee; padding:20px }
+.card { background:#1e1e1e; padding:16px; margin-bottom:16px; border-radius:8px }
+label { display:block; margin-top:10px }
+input[type=range] { width:100% }
+button { padding:8px 12px; margin-top:10px }
+.lock { color:#ff4d4d }
+.ok { color:#4caf50 }
+</style>
+</head>
+<body>
+
+<h2>관리자 제어 패널</h2>
+
+<div class="card">
+  <h3>임계치 설정</h3>
+  <label>HIT Threshold <span id="hit_v"></span></label>
+  <input id="hit" type="range" min="0.3" max="0.9" step="0.01">
+
+  <label>PASS Threshold <span id="pass_v"></span></label>
+  <input id="pass" type="range" min="0.0" max="0.6" step="0.01">
+
+  <label>기간</label>
+  <select id="period">
+    <option value="daily">daily</option>
+    <option value="weekly">weekly</option>
+    <option value="monthly">monthly</option>
+  </select>
+
+  <label>
+    <input type="checkbox" id="auto_stop"> Auto-STOP
+  </label>
+
+  <button onclick="save()">저장</button>
+</div>
+
+<div class="card">
+  <h3>LOCK 상태</h3>
+  <div id="lock_state"></div>
+  <button onclick="release()">LOCK 해제</button>
+</div>
+
+<script>
+async function load() {
+  const s = await fetch('/api/admin/settings').then(r=>r.json())
+  hit.value = s.hit_threshold
+  pass.value = s.pass_threshold
+  period.value = s.period
+  auto_stop.checked = s.auto_stop
+  hit_v.innerText = s.hit_threshold
+  pass_v.innerText = s.pass_threshold
+
+  const l = await fetch('/api/admin/lock').then(r=>r.json())
+  lock_state.innerHTML = l.locked
+    ? `<span class="lock">LOCKED</span><br>${l.reason}`
+    : `<span class="ok">UNLOCKED</span>`
+}
+
+hit.oninput = ()=> hit_v.innerText = hit.value
+pass.oninput = ()=> pass_v.innerText = pass.value
+
+async function save() {
+  await fetch('/api/admin/settings', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      hit_threshold: parseFloat(hit.value),
+      pass_threshold: parseFloat(pass.value),
+      period: period.value,
+      auto_stop: auto_stop.checked
+    })
+  })
+  alert('저장 완료')
+}
+
+async function release() {
+  await fetch('/api/admin/lock/release', {method:'POST'})
+  load()
+}
+
+load()
+</script>
+
+</body>
+</html>

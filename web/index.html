@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>Race KPI Admin</title>
+
+  <!-- 기본 스타일 -->
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0f172a;
+      color: #e5e7eb;
+    }
+
+    h2 {
+      margin-bottom: 16px;
+    }
+
+    .card {
+      background: #111827;
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,.25);
+    }
+
+    .card-title {
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .mini {
+      font-size: 13px;
+      line-height: 1.6;
+      color: #cbd5f5;
+    }
+
+    button, select {
+      background: #1f2933;
+      color: #e5e7eb;
+      border: 1px solid #374151;
+      border-radius: 6px;
+      padding: 6px 10px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #374151;
+    }
+
+    .locked {
+      color: #f87171;
+      font-weight: 700;
+    }
+
+    .unlocked {
+      color: #34d399;
+      font-weight: 700;
+    }
+
+    canvas {
+      margin-top: 10px;
+    }
+  </style>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+
+<h2>Race KPI Admin</h2>
+
+<!-- 전략 ON/OFF -->
+<div class="card">
+  <div class="card-title">전략 ON / OFF</div>
+  <div id="strategyList" class="mini">로딩중...</div>
+</div>
+
+<!-- 추이 그래프 -->
+<div class="card">
+  <div class="card-title">추이 그래프</div>
+  <div style="display:flex; gap:8px; align-items:center;">
+    <select id="trendPeriod">
+      <option value="month">월간</option>
+      <option value="quarter">분기</option>
+    </select>
+    <button id="btnTrend">추이 조회</button>
+  </div>
+  <canvas id="trendChart" height="120"></canvas>
+</div>
+
+<!-- 경고 이력 -->
+<div class="card">
+  <div class="card-title">경고 이력</div>
+  <button id="btnAlertHistory">이력 새로고침</button>
+  <div id="alertHistory" class="mini" style="margin-top:10px;"></div>
+</div>
+
+<!-- 경영진 PDF -->
+<div class="card">
+  <div class="card-title">경영진 PDF</div>
+  <button id="btnExecPdf">경영진 PDF 열기</button>
+</div>
+
+<script>
+/* =========================
+   전략 상태 + LOCK
+========================= */
+async function refreshStrategy() {
+  const s = await fetch('/api/admin/settings').then(r => r.json());
+  const l = await fetch('/api/admin/lock').then(r => r.json());
+  const el = document.getElementById('strategyList');
+
+  if (l.locked) {
+    el.innerHTML = `<span class="locked">LOCKED</span><br>${l.reason}<br>${l.updated_at}`;
+  } else {
+    el.innerHTML = s.auto_stop
+      ? `<span class="unlocked">전략 활성 (AUTO)</span>`
+      : `전략 중지`;
+  }
+}
+
+/* =========================
+   경고 이력
+========================= */
+async function loadAlertHistory() {
+  const h = await fetch('/api/admin/lock/history').then(r => r.json());
+  const el = document.getElementById('alertHistory');
+
+  if (!h.length) {
+    el.innerHTML = '이력 없음';
+    return;
+  }
+
+  el.innerHTML = h.map(x =>
+    `[${x.level}] ${x.created_at}<br>${x.reason}`
+  ).join('<hr>');
+}
+
+/* =========================
+   KPI 추이 그래프
+========================= */
+let trendChart;
+
+async function loadTrend() {
+  const period = document.getElementById('trendPeriod').value;
+  const data = await fetch(`/api/kpi/trend?period=${period}`).then(r => r.json());
+
+  const labels = data.map(d => d.t);
+  const values = data.map(d => d.hit_rate);
+
+  if (trendChart) trendChart.destroy();
+
+  trendChart = new Chart(
+    document.getElementById('trendChart'),
+    {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: 'HIT RATE (%)',
+          data: values,
+          borderWidth: 2
+        }]
+      },
+      options: {
+        scales: { y: { min: 0, max: 100 } }
+      }
+    }
+  );
+}
+
+/* =========================
+   버튼 바인딩
+========================= */
+document.getElementById('btnTrend').onclick = loadTrend;
+document.getElementById('btnAlertHistory').onclick = loadAlertHistory;
+document.getElementById('btnExecPdf').onclick = () =>
+  window.open('/api/kpi/report/pdf?period=monthly');
+
+/* =========================
+   초기 로드
+========================= */
+refreshStrategy();
+loadAlertHistory();
+setInterval(refreshStrategy, 5000);
+</script>
+
+</body>
+</html>

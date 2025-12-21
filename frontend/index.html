@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <title>KPI Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    body { font-family: Arial, sans-serif; background:#0f1115; color:#eaeaea; margin:0; }
+    .wrap { max-width:1200px; margin:24px auto; padding:0 16px; }
+    h1 { margin:0 0 12px; }
+
+    .toolbar {
+      display:flex; flex-wrap:wrap; gap:8px;
+      align-items:center; margin-bottom:12px;
+    }
+
+    button, select {
+      padding:8px 12px; border:0; border-radius:6px;
+      background:#1a2030; color:#eaeaea; cursor:pointer;
+    }
+    .btn { background:#2b6cff; color:#fff; }
+    .btn-active { outline:2px solid #2b6cff; }
+
+    .card {
+      background:#151923; border-radius:10px;
+      padding:12px; margin-top:12px;
+    }
+
+    table { width:100%; border-collapse:collapse; }
+    th, td {
+      padding:8px; border-bottom:1px solid #242a3a;
+      text-align:center;
+    }
+    th { background:#1a2030; }
+
+    .kpi-green { background:#123b2a; color:#7dffb3; }
+    .kpi-yellow { background:#3a3412; color:#ffe27a; }
+    .kpi-red { background:#3a1414; color:#ff8a8a; }
+    .kpi-pass { background:#1f2433; color:#9aa4bf; }
+
+    .muted { opacity:.7; }
+    .error { color:#ff6b6b; }
+
+    .alertbar {
+      margin-top:10px; padding:10px 12px;
+      border-radius:8px;
+      background:#2b1f0f; color:#ffd39a;
+      display:none;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <h1>KPI Dashboard</h1>
+
+    <div class="toolbar">
+      <button id="btnMonth" onclick="setMode('month')">월간</button>
+      <button id="btnQuarter" onclick="setMode('quarter')">분기</button>
+
+      <select id="periodSelect"></select>
+
+      <button class="btn" onclick="loadKpi()">새로고침</button>
+      <button class="btn" onclick="downloadPdf()">PDF 다운로드</button>
+      <button class="btn" onclick="dispatchReport()">Slack/메일 발송</button>
+
+      <span id="periodLabel" class="muted"></span>
+    </div>
+
+    <div id="alertbar" class="alertbar"></div>
+
+    <div class="card">
+      <div id="content">로딩 중…</div>
+    </div>
+
+    <div class="card">
+      <canvas id="trendChart" height="120"></canvas>
+    </div>
+  </div>
+
+  <script src="/frontend/app.js"></script>
+</body>
+</html>

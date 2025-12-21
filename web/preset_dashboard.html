@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>Preset Performance</title>
+<style>
+body{background:#111;color:#eee;font-family:sans-serif;padding:20px}
+.card{background:#1c1c1c;border:1px solid #333;border-radius:8px;padding:14px;margin-bottom:12px}
+h2{margin-bottom:8px}
+</style>
+</head>
+<body>
+
+<h1>프리셋 성능 비교</h1>
+
+<div class="card" id="presetState"></div>
+<div class="card" id="modelState"></div>
+
+<script>
+async function load() {
+  const r = await fetch("/api/runtime/state");
+  const d = await r.json();
+
+  document.getElementById("presetState").innerHTML = `
+    <h2>현재 프리셋</h2>
+    <div>${d.preset}</div>
+    <div>업데이트: ${d.updated_at}</div>
+  `;
+
+  let html = "<h2>모델별 상태</h2>";
+  Object.entries(d.models).forEach(([k,v])=>{
+    html += `<div>
+      Model ${k} | PASS: ${v.auto_pass} | hit:${v.hit} miss:${v.miss} | bias:${v.bias}
+    </div>`;
+  });
+  document.getElementById("modelState").innerHTML = html;
+}
+
+load();
+setInterval(load,3000);
+</script>
+
+</body>
+</html>

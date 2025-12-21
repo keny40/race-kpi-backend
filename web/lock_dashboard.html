@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>LOCK Monitoring</title>
+<style>
+body{background:#111;color:#eee;font-family:sans-serif;padding:20px}
+.card{background:#1c1c1c;border:1px solid #333;border-radius:8px;padding:14px;margin-bottom:12px}
+.row{display:flex;gap:12px;flex-wrap:wrap}
+.badge{padding:4px 8px;border-radius:4px}
+.on{background:#f44336}.off{background:#4caf50}
+</style>
+</head>
+<body>
+
+<h1>LOCK 실시간 모니터링</h1>
+
+<div class="row">
+  <div class="card" id="lockState"></div>
+  <div class="card" id="bestCombo"></div>
+</div>
+
+<div class="card" id="presetStats"></div>
+
+<script>
+async function load(){
+  const s = await (await fetch("/api/runtime/state")).json();
+  const b = await (await fetch("/api/optimizer/best")).json();
+
+  document.getElementById("lockState").innerHTML = `
+    <h3>LOCK 상태</h3>
+    <div class="badge ${s.locked?'on':'off'}">${s.locked?'LOCKED':'UNLOCKED'}</div>
+    <div>preset active: ${s.preset_active.join(",")}</div>
+  `;
+
+  document.getElementById("bestCombo").innerHTML = `
+    <h3>최적 조합</h3>
+    <div>${b.model||"-"} × ${b.preset||"-"}</div>
+    <div>HitRate: ${b.rate? (b.rate*100).toFixed(1):"-"}%</div>
+  `;
+
+  let html="<h3>프리셋 통계</h3>";
+  Object.entries(s.preset_stats).forEach(([k,v])=>{
+    const r=v.pred?((v.hit/v.pred)*100).toFixed(1):"0";
+    html+=`<div>${k} : ${v.hit}/${v.pred} (${r}%)</div>`;
+  });
+  document.getElementById("presetStats").innerHTML=html;
+}
+load();
+setInterval(load,3000);
+</script>
+
+</body>
+</html>
