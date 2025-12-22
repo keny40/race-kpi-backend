@@ -1,9 +1,8 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import Response
 from fastapi.staticfiles import StaticFiles
+from backend.routes.predict import router as predict_router
 import os
-
 
 app = FastAPI()
 
@@ -15,18 +14,11 @@ app.add_middleware(
     allow_credentials=False,
 )
 
-@app.options("/{path:path}")
-async def options_handler(path: str, request: Request):
-    return Response(status_code=200)
+app.include_router(predict_router)
 
 @app.get("/")
 def root():
     return {"status": "ok"}
-
-# 🔴 라우터 전부 임시 비활성화
-# from backend.routes.kpi_matrix import router as kpi_matrix_router
-# ...
-# app.include_router(...)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_DIR = os.path.join(BASE_DIR, "static")
