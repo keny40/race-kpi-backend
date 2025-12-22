@@ -2,15 +2,15 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 from fastapi.staticfiles import StaticFiles
+import os
 
+# 🔹 라우터 import
 from backend.routes.predict import router as predict_router
 from backend.routes.result import router as result_router
 
-import os
-
 app = FastAPI(title="Race KPI Backend")
 
-# ===== CORS (Render + static HTML 대응) =====
+# ===== CORS =====
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -19,21 +19,24 @@ app.add_middleware(
     allow_credentials=False,
 )
 
-# ===== OPTIONS preflight 강제 통과 =====
+# ===== OPTIONS (preflight 강제 통과) =====
 @app.options("/{path:path}")
 async def options_handler(path: str, request: Request):
     return Response(status_code=200)
-
-# ===== API Routers =====
-app.include_router(predict_router)
-app.include_router(result_router)
 
 # ===== Root =====
 @app.get("/")
 def root():
     return {"status": "ok"}
 
-# ===== Static mount (/static/predict_test.html) =====
+# ===== Router 등록 (🔥 이 부분이 핵심) =====
+print("✅ predict router loaded")
+app.include_router(predict_router)
+
+print("✅ result router loaded")
+app.include_router(result_router)
+
+# ===== Static =====
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_DIR = os.path.join(BASE_DIR, "static")
 
