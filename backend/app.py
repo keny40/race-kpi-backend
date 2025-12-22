@@ -4,9 +4,7 @@ from fastapi.responses import Response
 from fastapi.staticfiles import StaticFiles
 import os
 
-# 🔹 라우터 import
-from backend.routes.predict import router as predict_router
-from backend.routes.result import router as result_router
+print("🚀 backend.app STARTED")
 
 app = FastAPI(title="Race KPI Backend")
 
@@ -19,7 +17,7 @@ app.add_middleware(
     allow_credentials=False,
 )
 
-# ===== OPTIONS (preflight) =====
+# ===== OPTIONS =====
 @app.options("/{path:path}")
 async def options_handler(path: str, request: Request):
     return Response(status_code=200)
@@ -29,9 +27,31 @@ async def options_handler(path: str, request: Request):
 def root():
     return {"status": "ok"}
 
-# ===== Router 등록 (🔥 핵심) =====
-app.include_router(predict_router)   # /api/predict
-app.include_router(result_router)    # /api/result/actual 🔴
+# ===== Router imports (🔥 여기서 확인) =====
+try:
+    from backend.routes.predict import router as predict_router
+    print("✅ predict_router imported")
+except Exception as e:
+    print("❌ predict_router import FAILED:", e)
+
+try:
+    from backend.routes.result import router as result_router
+    print("✅ result_router imported")
+except Exception as e:
+    print("❌ result_router import FAILED:", e)
+
+# ===== Router include =====
+try:
+    app.include_router(predict_router)
+    print("✅ predict_router included")
+except Exception as e:
+    print("❌ predict_router include FAILED:", e)
+
+try:
+    app.include_router(result_router)
+    print("✅ result_router included")
+except Exception as e:
+    print("❌ result_router include FAILED:", e)
 
 # ===== Static =====
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
