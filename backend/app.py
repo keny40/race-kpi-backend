@@ -2,30 +2,25 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 from fastapi.staticfiles import StaticFiles
+import os
 
 app = FastAPI()
 
-app.mount(
-    "/static",
-    StaticFiles(directory="backend/static", html=True),
-    name="static"
-)
-
-# ===== CORS (단 한 번만, 이 설정이 정답) =====
+# ===== CORS (테스트/연동 단계 기준) =====
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],          # 테스트 단계
-    allow_methods=["*"],          # OPTIONS 포함
-    allow_headers=["*"],          # Content-Type 포함
-    allow_credentials=False,      # origin=null 대응 (중요)
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+    allow_credentials=False,
 )
 
-# ===== 전역 OPTIONS 핸들러 (preflight 강제 통과) =====
+# ===== 전역 OPTIONS (preflight 강제 통과) =====
 @app.options("/{path:path}")
 async def options_handler(path: str, request: Request):
     return Response(status_code=200)
 
-# ===== 루트 엔드포인트 =====
+# ===== 루트 =====
 @app.get("/")
 def root():
     return {
@@ -48,9 +43,13 @@ app.include_router(kpi_testdata_router)
 app.include_router(kpi_summary_router)
 app.include_router(kpi_trend_router)
 
-# ===== 관리자 정적 페이지 =====
-app.mount(
-    "/admin",
-    StaticFiles(directory="backend/admin", html=True),
-    name="admin"
-)
+# ===== 정적 파일 (존재할 때만 mount: Render 안전) =====
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+STATIC_DIR = os.path.join(BASE_DIR, "static")
+
+if os.path.isdir(STATIC_DIR):
+    app.mount(
+        "/static",
+        StaticFiles(directory=STATIC_DIR, html=True),
+        name="static"
+    )
