@@ -19,7 +19,7 @@ app.add_middleware(
     allow_credentials=False,
 )
 
-# ===== OPTIONS (preflight 강제 통과) =====
+# ===== OPTIONS (preflight) =====
 @app.options("/{path:path}")
 async def options_handler(path: str, request: Request):
     return Response(status_code=200)
@@ -29,12 +29,9 @@ async def options_handler(path: str, request: Request):
 def root():
     return {"status": "ok"}
 
-# ===== Router 등록 (🔥 이 부분이 핵심) =====
-print("✅ predict router loaded")
-app.include_router(predict_router)
-
-print("✅ result router loaded")
-app.include_router(result_router)
+# ===== Router 등록 (🔥 핵심) =====
+app.include_router(predict_router)   # /api/predict
+app.include_router(result_router)    # /api/result/actual 🔴
 
 # ===== Static =====
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
