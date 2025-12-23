@@ -1,20 +1,15 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
-
-# === BASE DIR (Render-safe absolute path) ===
-BASE_DIR = Path(__file__).resolve().parent
-STATIC_DIR = BASE_DIR / "static"
-DASHBOARD_HTML = STATIC_DIR / "dashboard" / "index.html"
 
 app = FastAPI(
     title="Race KPI Backend",
     version="0.1.0",
 )
 
-# === CORS ===
+# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -23,10 +18,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# === Static mount ===
+# === BASE PATH ===
+BASE_DIR = Path(__file__).resolve().parent
+STATIC_DIR = BASE_DIR / "static"
+DASHBOARD_HTML = STATIC_DIR / "dashboard" / "index.html"
+
+# static mount
 app.mount(
     "/static",
-    StaticFiles(directory=str(STATIC_DIR)),
+    StaticFiles(directory=STATIC_DIR),
     name="static"
 )
 
@@ -42,12 +42,12 @@ app.include_router(result_router)
 def root():
     if not DASHBOARD_HTML.exists():
         return HTMLResponse(
-            content=f"<h1>Dashboard not found</h1><pre>{DASHBOARD_HTML}</pre>",
-            status_code=500
+            f"<h1>Dashboard not found</h1><pre>{DASHBOARD_HTML}</pre>",
+            status_code=500,
         )
-    return FileResponse(DASHBOARD_HTML)
+    return DASHBOARD_HTML.read_text(encoding="utf-8")
 
-# === health ===
+# health check
 @app.get("/health")
 def health():
     return {"status": "ok"}
