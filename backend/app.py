@@ -1,65 +1,41 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import Response
-from fastapi.staticfiles import StaticFiles
-import os
 
-print("🚀 backend.app STARTED")
+from backend.routes.predict import router as predict_router
+from backend.routes.result_actual import router as result_router
 
-app = FastAPI(title="Race KPI Backend")
+from backend.routes.kpi_summary import router as kpi_summary_router
+from backend.routes.kpi_trend import router as kpi_trend_router
+from backend.routes.kpi_match import router as kpi_match_router
+from backend.routes.kpi_notify import router as kpi_notify_router
+from backend.routes.kpi_threshold import router as kpi_threshold_router
+from backend.routes.kpi_strategy import router as kpi_strategy_router
+from backend.routes.kpi_report import router as kpi_report_router
 
-# ===== CORS =====
+app = FastAPI(title="Race KPI Backend", version="0.1.0")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    allow_credentials=False,
 )
 
-# ===== OPTIONS =====
-@app.options("/{path:path}")
-async def options_handler(path: str, request: Request):
-    return Response(status_code=200)
+# 기본
+app.include_router(predict_router)
+app.include_router(result_router)
 
-# ===== Root =====
+# KPI
+app.include_router(kpi_summary_router)
+app.include_router(kpi_trend_router)
+app.include_router(kpi_match_router)
+app.include_router(kpi_notify_router)
+app.include_router(kpi_threshold_router)
+app.include_router(kpi_strategy_router)
+app.include_router(kpi_report_router)
+
+
 @app.get("/")
 def root():
     return {"status": "ok"}
-
-# ===== Router imports (🔥 여기서 확인) =====
-try:
-    from backend.routes.predict import router as predict_router
-    print("✅ predict_router imported")
-except Exception as e:
-    print("❌ predict_router import FAILED:", e)
-
-try:
-    from backend.routes.result import router as result_router
-    print("✅ result_router imported")
-except Exception as e:
-    print("❌ result_router import FAILED:", e)
-
-# ===== Router include =====
-try:
-    app.include_router(predict_router)
-    print("✅ predict_router included")
-except Exception as e:
-    print("❌ predict_router include FAILED:", e)
-
-try:
-    app.include_router(result_router)
-    print("✅ result_router included")
-except Exception as e:
-    print("❌ result_router include FAILED:", e)
-
-# ===== Static =====
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-STATIC_DIR = os.path.join(BASE_DIR, "static")
-
-if os.path.isdir(STATIC_DIR):
-    app.mount(
-        "/static",
-        StaticFiles(directory=STATIC_DIR, html=True),
-        name="static"
-    )
