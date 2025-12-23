@@ -1,19 +1,15 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 
-from backend.routes.predict import router as predict_router
-from backend.routes.result_actual import router as result_router
+# === FastAPI app ===
+app = FastAPI(
+    title="Race KPI Backend",
+    version="0.1.0"
+)
 
-from backend.routes.kpi_summary import router as kpi_summary_router
-from backend.routes.kpi_trend import router as kpi_trend_router
-from backend.routes.kpi_match import router as kpi_match_router
-from backend.routes.kpi_notify import router as kpi_notify_router
-from backend.routes.kpi_threshold import router as kpi_threshold_router
-from backend.routes.kpi_strategy import router as kpi_strategy_router
-from backend.routes.kpi_report import router as kpi_report_router
-
-app = FastAPI(title="Race KPI Backend", version="0.1.0")
-
+# === CORS (프론트/외부 호출 대비) ===
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -22,20 +18,50 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 기본
+# === Static files (dashboard) ===
+app.mount(
+    "/static",
+    StaticFiles(directory="backend/static"),
+    name="static"
+)
+
+# === ROUTES IMPORT ===
+from backend.routes.predict import router as predict_router
+from backend.routes.result_actual import router as result_router
+
+# KPI / 기타 라우터가 있다면 유지
+try:
+    from backend.routes.kpi_report import router as kpi_report_router
+    from backend.routes.kpi_summary import router as kpi_summary_router
+    from backend.routes.kpi_trend import router as kpi_trend_router
+
+    app.include_router(kpi_report_router)
+    app.include_router(kpi_summary_router)
+    app.include_router(kpi_trend_router)
+except Exception:
+    pass
+
 app.include_router(predict_router)
 app.include_router(result_router)
 
-# KPI
-app.include_router(kpi_summary_router)
-app.include_router(kpi_trend_router)
-app.include_router(kpi_match_router)
-app.include_router(kpi_notify_router)
-app.include_router(kpi_threshold_router)
-app.include_router(kpi_strategy_router)
-app.include_router(kpi_report_router)
-
-
-@app.get("/")
+# === ROOT: 대시보드 화면 ===
+@app.get("/", response_class=HTMLResponse)
 def root():
+    try:
+        with open("backend/static/dashboard/index.html", "r", encoding="utf-8") as f:
+            return f.read()
+    except FileNotFoundError:
+        return HTMLResponse(
+            "<h2>dashboard/index.html not found</h2>",
+            status_code=500
+        )
+
+# === Health check (Render용) ===
+@app.get("/health")
+def health():
     return {"status": "ok"}
+
+# === OPTIONS handler (CORS preflight 안전장치) ===
+@app.options("/{path:path}")
+def options_handler(path: str):
+    return JSONResponse(content={"ok": True})
