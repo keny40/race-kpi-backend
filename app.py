@@ -18,30 +18,30 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 프로젝트 루트 기준 절대경로
+# static
 BASE_DIR = Path(__file__).resolve().parent
-DASHBOARD_HTML = BASE_DIR / "backend" / "static" / "dashboard" / "index.html"
+STATIC_DIR = BASE_DIR / "backend" / "static"
 
-# static mount
 app.mount(
     "/static",
-    StaticFiles(directory=BASE_DIR / "backend" / "static"),
+    StaticFiles(directory=str(STATIC_DIR)),
     name="static"
 )
 
-# API routers
-from backend.routes.predict import router as predict_router
-from backend.routes.result_actual import router as result_router
+# routers (❗ backend. 제거)
+from routes.predict import router as predict_router
+from routes.result_actual import router as result_router
 
 app.include_router(predict_router)
 app.include_router(result_router)
 
-# ROOT → 대시보드
+# root dashboard
 @app.get("/", response_class=HTMLResponse)
 def root():
-    return DASHBOARD_HTML.read_text(encoding="utf-8")
+    index_path = STATIC_DIR / "dashboard" / "index.html"
+    return index_path.read_text(encoding="utf-8")
 
-# health check
+# health
 @app.get("/health")
 def health():
     return {"status": "ok"}
