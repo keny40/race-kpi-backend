@@ -1,8 +1,7 @@
 import sqlite3
 import os
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-DB_PATH = os.path.join(BASE_DIR, "races.db")
+DB_PATH = "/tmp/races.db"
 
 def get_conn():
     conn = sqlite3.connect(DB_PATH, check_same_thread=False)
