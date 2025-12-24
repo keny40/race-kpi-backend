@@ -1,5 +1,4 @@
 import sqlite3
-import os
 
 DB_PATH = "/tmp/races.db"
 
@@ -11,11 +10,14 @@ def get_conn():
 
 def _ensure_schema(conn):
     cur = conn.cursor()
+
     cur.execute("""
     CREATE TABLE IF NOT EXISTS race_actuals (
         race_id TEXT PRIMARY KEY,
         winner TEXT NOT NULL,
+        placed TEXT,
         created_at TEXT NOT NULL
     )
     """)
+
     conn.commit()
