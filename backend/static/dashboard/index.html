@@ -1,89 +1,174 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <title>Horse Predictor – 운영 대시보드</title>
+  <meta charset="UTF-8" />
+  <title>Race KPI Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; }
+    .cards { display: flex; gap: 16px; margin-bottom: 24px; }
+    .card {
+      flex: 1;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 16px;
+    }
+    h1, h3 { margin-bottom: 12px; }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      max-width: 900px;
+      margin-top: 12px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 6px;
+      text-align: center;
+    }
+    th { background: #f0f0f0; }
+    section { margin-top: 32px; }
+  </style>
 </head>
 <body>
 
-<h1>🐎 Horse Predictor – 운영 대시보드</h1>
+<h1>Race KPI Dashboard</h1>
+<div id="status"></div>
 
-<hr/>
+<!-- KPI SUMMARY -->
+<div class="cards">
+  <div class="card">total<br><b id="total">0</b></div>
+  <div class="card">hit<br><b id="hit">0</b></div>
+  <div class="card">miss<br><b id="miss">0</b></div>
+  <div class="card">pass<br><b id="pass">0</b></div>
+  <div class="card">accuracy<br><b id="accuracy">0.0000</b></div>
+</div>
 
-<h2>월간 KPI</h2>
-Year <input id="kpiYear" value="2025">
-Month <input id="kpiMonth" value="4">
-<button onclick="loadKPI()">조회</button>
-<div id="kpiResult"></div>
+<!-- CHARTS -->
+<div class="cards">
+  <div class="card">
+    <h3>HIT / MISS / PASS 비율</h3>
+    <canvas id="ratioChart"></canvas>
+  </div>
+  <div class="card">
+    <h3>정확도 추이</h3>
+    <canvas id="trendChart"></canvas>
+  </div>
+</div>
 
-<hr/>
+<!-- THRESHOLD UI -->
+<section>
+  <h3>임계치 설정</h3>
+  <label>WARN: <span id="warnVal"></span></label><br>
+  <input type="range" id="warn" min="0" max="1" step="0.01"><br><br>
+  <label>FAIL: <span id="failVal"></span></label><br>
+  <input type="range" id="fail" min="0" max="1" step="0.01"><br><br>
+  <button onclick="saveThreshold()">저장</button>
+</section>
 
-<h2>Confidence 분포</h2>
-Season <input id="confSeason" value="202504">
-Race <input id="confRace" value="202504-02">
-<button onclick="loadConfidence()">조회</button>
-<pre id="confResult"></pre>
-
-<hr/>
-
-<h2>전략 비교 (PASS 제외 + Threshold)</h2>
-Season <input id="strSeason" value="202504">
-Thresholds <input id="strTh" value="0.10,0.15,0.20,0.25">
-<button onclick="loadStrategy()">비교</button>
-<pre id="strResult"></pre>
-
-<hr/>
-
-<h2>월·분기 PDF 리포트</h2>
-Year <input id="pdfYear" value="2025">
-Month <input id="pdfMonth" value="4">
-<button onclick="makeMonthPDF()">월간 PDF</button>
-
-<br/><br/>
-
-Year <input id="pdfYearQ" value="2025">
-Quarter <input id="pdfQuarter" value="2">
-<button onclick="makeQuarterPDF()">분기 PDF</button>
+<!-- STRATEGY KPI -->
+<section>
+  <h3>전략별 KPI 비교</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Strategy</th>
+        <th>Total</th>
+        <th>Hit</th>
+        <th>Miss</th>
+        <th>Pass</th>
+        <th>Accuracy</th>
+      </tr>
+    </thead>
+    <tbody id="strategyTable"></tbody>
+  </table>
+</section>
 
 <script>
-async function loadKPI() {
-  const y = kpiYear.value;
-  const m = kpiMonth.value;
-  const r = await fetch(`/api/metrics/month?year=${y}&month=${m}`);
+async function loadSummary(){
+  const r = await fetch('/api/kpi/summary');
   const d = await r.json();
-  kpiResult.innerHTML =
-    `HIT:${d.hits} / MISS:${d.misses} / PASS:${d.passes} / 적중률:${(d.accuracy*100).toFixed(2)}%`;
+  total.textContent = d.total;
+  hit.textContent = d.hit;
+  miss.textContent = d.miss;
+  pass.textContent = d.pass;
+  accuracy.textContent = d.accuracy.toFixed(4);
+
+  new Chart(document.getElementById('ratioChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['HIT','MISS','PASS'],
+      datasets: [{
+        data: [d.hit, d.miss, d.pass],
+        backgroundColor: ['#4caf50','#f44336','#ff9800']
+      }]
+    }
+  });
 }
 
-async function loadConfidence() {
-  const s = confSeason.value;
-  const r = confRace.value;
-  const res = await fetch(`/api/metrics/confidence?season=${s}&race=${r}`);
-  confResult.textContent = JSON.stringify(await res.json(), null, 2);
+async function loadTrend(){
+  const r = await fetch('/api/kpi/trend?period=day');
+  const d = await r.json();
+
+  new Chart(document.getElementById('trendChart'), {
+    type: 'line',
+    data: {
+      labels: d.series.map(x => x.date),
+      datasets: [{
+        label: 'accuracy',
+        data: d.series.map(x => x.accuracy),
+        borderColor: '#2196f3',
+        fill: false
+      }]
+    }
+  });
 }
 
-async function loadStrategy() {
-  const s = strSeason.value;
-  const t = strTh.value;
-  const res = await fetch(`/api/metrics/strategy?season=${s}&thresholds=${t}`);
-  strResult.textContent = JSON.stringify(await res.json(), null, 2);
+async function loadThreshold(){
+  const r = await fetch('/api/kpi/threshold');
+  const d = await r.json();
+  warn.value = d.warn;
+  fail.value = d.fail;
+  warnVal.textContent = d.warn;
+  failVal.textContent = d.fail;
+}
+warn.oninput = () => warnVal.textContent = warn.value;
+fail.oninput = () => failVal.textContent = fail.value;
+
+async function saveThreshold(){
+  await fetch('/api/kpi/threshold', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      warn: parseFloat(warn.value),
+      fail: parseFloat(fail.value)
+    })
+  });
+  alert('임계치 저장 완료');
 }
 
-async function makeMonthPDF() {
-  const y = pdfYear.value;
-  const m = pdfMonth.value;
-  const res = await fetch(`/api/report/monthly?year=${y}&month=${m}`, {method:"POST"});
-  const d = await res.json();
-  window.open(d.url);
+async function loadStrategy(){
+  const r = await fetch('/api/kpi/strategy');
+  const data = await r.json();
+  const tbody = document.getElementById('strategyTable');
+  tbody.innerHTML = '';
+  data.forEach(d => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${d.strategy}</td>
+      <td>${d.total}</td>
+      <td>${d.hit}</td>
+      <td>${d.miss}</td>
+      <td>${d.pass}</td>
+      <td>${d.accuracy}</td>
+    `;
+    tbody.appendChild(tr);
+  });
 }
 
-async function makeQuarterPDF() {
-  const y = pdfYearQ.value;
-  const q = pdfQuarter.value;
-  const res = await fetch(`/api/report/quarter?year=${y}&quarter=${q}`, {method:"POST"});
-  const d = await res.json();
-  window.open(d.url);
-}
+loadSummary();
+loadTrend();
+loadThreshold();
+loadStrategy();
 </script>
 
 </body>
