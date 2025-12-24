@@ -31,3 +31,18 @@ CREATE TABLE IF NOT EXISTS kpi_snapshot (
 );
 
 CREATE INDEX IF NOT EXISTS idx_kpi_snapshot_asof ON kpi_snapshot(asof_at);
+
+CREATE TABLE IF NOT EXISTS race_actuals (
+  race_id TEXT PRIMARY KEY,
+  winner TEXT NOT NULL,
+  placed TEXT,
+  payoff REAL,
+  race_date TEXT,
+  created_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS race_actuals (
+    race_id TEXT PRIMARY KEY,
+    winner TEXT NOT NULL,
+    created_at TEXT NOT NULL
+);
