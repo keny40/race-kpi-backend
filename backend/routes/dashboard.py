@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 import sqlite3
-from season import SeasonManager
+from backend.services.season import SeasonManager
+
 
 DB_PATH = "races.db"
 router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
