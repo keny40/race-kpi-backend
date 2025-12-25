@@ -1,3 +1,15 @@
+2742a1157e8e11c9bb3a2dbb02a012a7b8a12e69a5be0282712d62e610fd4a29
+
+http://localhost:8080/predict_test.html
+
+
+http://127.0.0.1:8000/_debug
+http://127.0.0.1:8000/api/kpi/match
+http://127.0.0.1:8000/ui/results
+http://127.0.0.1:8000/docs
+
+
+
 예측 → 로그 저장 → 피드백 반영 → 대시보드 표시
 여기까지 “말 경주 예측 + 실측 성능 대시보드 1차 버전” 완성입니다
 

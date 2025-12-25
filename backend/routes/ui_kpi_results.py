@@ -2,10 +2,11 @@ from fastapi import APIRouter
 from fastapi.responses import HTMLResponse
 from backend.db.conn import get_conn
 
+
 router = APIRouter(prefix="/ui", tags=["ui"])
 
-@router.get("/results", response_class=HTMLResponse)
-def ui_results():
+@router.get("/kpi-results", response_class=HTMLResponse)
+def ui_kpi_results():
     conn = get_conn()
     cur = conn.cursor()
 
@@ -31,51 +32,34 @@ def ui_results():
     rows = cur.fetchall()
     conn.close()
 
-    def color(result):
-        if result == "HIT":
-            return "#2ecc71"
-        if result == "MISS":
-            return "#e74c3c"
-        return "#95a5a6"
+    def color(r):
+        return {"HIT":"#2ecc71","MISS":"#e74c3c","PASS":"#95a5a6"}.get(r,"#000")
 
-    rows_html = ""
+    body = ""
     for r in rows:
-        rows_html += f"""
+        body += f"""
         <tr style="color:{color(r[4])}">
             <td>{r[0]}</td>
             <td>{r[1]}</td>
             <td>{r[3] or '-'}</td>
             <td><b>{r[4]}</b></td>
-            <td>{round(r[2], 4) if r[2] is not None else '-'}</td>
+            <td>{round(r[2],4) if r[2] else '-'}</td>
             <td>{r[5]}</td>
         </tr>
         """
 
-    html = f"""
+    return f"""
     <html>
     <head>
-        <title>KPI Match Results</title>
         <style>
-            body {{
-                font-family: Arial;
-                padding: 20px;
-            }}
-            table {{
-                border-collapse: collapse;
-                width: 100%;
-            }}
-            th, td {{
-                border: 1px solid #ddd;
-                padding: 8px;
-                text-align: center;
-            }}
-            th {{
-                background-color: #f4f4f4;
-            }}
+            body {{ font-family: Arial; padding:20px; }}
+            table {{ border-collapse: collapse; width:100%; }}
+            th, td {{ border:1px solid #ddd; padding:8px; text-align:center; }}
+            th {{ background:#f4f4f4; }}
         </style>
     </head>
     <body>
-        <h2>Prediction vs Actual Results</h2>
+        <h2>Prediction vs Actual (KPI)</h2>
         <table>
             <tr>
                 <th>Race ID</th>
@@ -85,10 +69,8 @@ def ui_results():
                 <th>Confidence</th>
                 <th>Time</th>
             </tr>
-            {rows_html}
+            {body}
         </table>
     </body>
     </html>
     """
-
-    return html

@@ -1,31 +1,41 @@
-# backend/ops_routes.py
-from __future__ import annotations
+from fastapi import APIRouter
+from pydantic import BaseModel
+import sqlite3
+from datetime import datetime
 
-from fastapi import APIRouter, HTTPException
-from fastapi.responses import FileResponse
-import os
+router = APIRouter(prefix="/api/result", tags=["actual"])
 
-from .ops_reporting import build_and_save_report_pdf
+DB_PATH = "backend/races.db"
 
-router = APIRouter(prefix="/api/ops", tags=["ops"])
+class ActualRequest(BaseModel):
+    race_id: str
+    winner: str
+    placed: str | None = None
+    payoff: float | None = None
+    race_date: str | None = None
 
+@router.post("/actual")
+def post_actual(req: ActualRequest):
+    con = sqlite3.connect(DB_PATH)
+    cur = con.cursor()
 
-@router.get("/report/pdf")
-def report_pdf(period: str = "monthly"):
-    """
-    period: monthly | quarterly
-    생성된 PDF 파일 경로를 반환하며, 바로 다운로드도 가능하게 FileResponse로 응답
-    """
-    try:
-        path = build_and_save_report_pdf(period=period)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    cur.execute("""
+        INSERT OR REPLACE INTO race_actuals
+        (race_id, winner, placed, payoff, race_date, created_at)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, (
+        req.race_id,
+        req.winner,
+        req.placed,
+        req.payoff,
+        req.race_date,
+        datetime.utcnow().isoformat()
+    ))
 
-    if not os.path.exists(path):
-        raise HTTPException(status_code=500, detail="pdf file not created")
+    con.commit()
+    con.close()
 
-    return FileResponse(
-        path,
-        media_type="application/pdf",
-        filename=os.path.basename(path),
-    )
+    return {
+        "status": "ok",
+        "race_id": req.race_id
+    }

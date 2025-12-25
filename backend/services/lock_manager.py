@@ -2,7 +2,7 @@ import sqlite3
 from datetime import datetime, timedelta
 from typing import Optional
 
-from backend.routes.kpi_report import generate_kpi_report_pdf_bytes
+#from backend.routes.kpi_report import generate_kpi_report_pdf_bytes
 from backend.services.lock_notifier import notify_lock_with_pdf
 
 
@@ -59,7 +59,7 @@ def lock_and_notify(
     con.commit()
 
     try:
-        pdf_bytes = generate_kpi_report_pdf_bytes(
+       # pdf_bytes = generate_kpi_report_pdf_bytes(
             period=period_for_pdf,
             summary_pages=pdf_pages,
             include_chart=True

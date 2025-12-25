@@ -1,36 +1,67 @@
-import sqlite3
-import os
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
+from backend.db.conn import get_conn
 
-router = APIRouter()
-DB_PATH = os.path.join(os.path.dirname(__file__), "..", "races.db")
+router = APIRouter(prefix="/api/kpi", tags=["kpi"])
 
 
-def _get_db():
-    return sqlite3.connect(DB_PATH)
+@router.get("/trend")
+@router.post("/trend")
+def get_kpi_trend(period: str = Query("day", pattern="^(day|week|month)$")):
+    """
+    period:
+      - day:   YYYY-MM-DD
+      - week:  YYYY-WW
+      - month: YYYY-MM
+    """
 
+    if period == "day":
+        bucket_expr = "substr(created_at, 1, 10)"
+        order_expr = "substr(created_at, 1, 10)"
+    elif period == "week":
+        bucket_expr = "strftime('%Y-%W', created_at)"
+        order_expr = "strftime('%Y-%W', created_at)"
+    else:
+        bucket_expr = "strftime('%Y-%m', created_at)"
+        order_expr = "strftime('%Y-%m', created_at)"
 
-@router.get("/api/kpi/trend")
-def get_kpi_trend(period: str = "month"):
-    con = _get_db()
-    try:
-        cur = con.cursor()
-        cur.execute("""
-            SELECT substr(p.created_at,1,7) as t,
-                   SUM(CASE WHEN p.decision=r.winner THEN 1 ELSE 0 END) as hit,
-                   COUNT(*) as total
-            FROM predictions p
-            LEFT JOIN results r ON p.race_id=r.race_id
-            GROUP BY t
-            ORDER BY t
-        """)
-        rows = cur.fetchall()
-        return [
-            {
-                "t": t,
-                "hit_rate": round((hit or 0) / max(1, total) * 100, 2)
-            }
-            for t, hit, total in rows
-        ]
-    finally:
-        con.close()
+    con = get_conn()
+    cur = con.cursor()
+
+    sql = f"""
+        SELECT
+            {bucket_expr} AS bucket,
+            COUNT(*) AS total,
+            SUM(CASE WHEN result = 'HIT' THEN 1 ELSE 0 END) AS hit,
+            SUM(CASE WHEN result = 'MISS' THEN 1 ELSE 0 END) AS miss,
+            SUM(CASE WHEN result = 'PASS' THEN 1 ELSE 0 END) AS pass
+        FROM v_race_match
+        GROUP BY bucket
+        ORDER BY {order_expr} ASC
+    """
+
+    cur.execute(sql)
+    rows = cur.fetchall()
+    con.close()
+
+    series = []
+    for bucket, total, hit, miss, passed in rows:
+        total = total or 0
+        hit = hit or 0
+        miss = miss or 0
+        passed = passed or 0
+
+        accuracy = round(hit / (hit + miss), 4) if (hit + miss) > 0 else 0.0
+
+        series.append({
+            "bucket": bucket,
+            "total": total,
+            "hit": hit,
+            "miss": miss,
+            "pass": passed,
+            "accuracy": accuracy
+        })
+
+    return {
+        "period": period,
+        "series": series
+    }

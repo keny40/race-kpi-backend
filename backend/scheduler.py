@@ -4,7 +4,7 @@ import time
 import threading
 from datetime import datetime, timedelta
 
-from backend.services.lock_manager import lock_and_notify, unlock_if_expired
+#from backend.services.lock_manager import lock_and_notify, unlock_if_expired
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "races.db")
 
