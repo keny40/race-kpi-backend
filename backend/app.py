@@ -45,3 +45,5 @@ def debug():
 @app.get("/")
 def health():
     return {"status": "ok"}
+
+print(">>> ui_dashboard_router loaded")
