@@ -1,13 +1,11 @@
 import sqlite3
-import os
 
-DB_PATH = "races.db"
+DB_PATH = "/tmp/races.db"
 
 def bootstrap_db():
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
 
-    # 실결과 테이블
     cur.execute("""
     CREATE TABLE IF NOT EXISTS race_actuals (
         race_id TEXT PRIMARY KEY,
@@ -19,7 +17,6 @@ def bootstrap_db():
     )
     """)
 
-    # 예측 테이블 (이미 있더라도 안전)
     cur.execute("""
     CREATE TABLE IF NOT EXISTS predictions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
