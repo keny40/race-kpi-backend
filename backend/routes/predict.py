@@ -3,12 +3,8 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 from datetime import datetime
-import sqlite3
-import os
-
-from backend.services.state_guard import get_system_state
-
-DB_PATH = os.getenv("DB_PATH", "races.db")
+from backend.db.conn import get_conn
+from backend.routes.kpi_status import get_kpi_status
 
 router = APIRouter(prefix="/api", tags=["predict"])
 
@@ -18,18 +14,11 @@ class PredictRequest(BaseModel):
     model: str = "A"
 
 
-def _conn():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
-
-
 @router.post("/predict")
 def predict(req: PredictRequest):
-    state = get_system_state()
+    kpi = get_kpi_status()
 
-    # 🔴 RED 상태면 강제 PASS
-    if state["status"] == "RED":
+    if kpi["status"] == "RED":
         return {
             "race_id": req.race_id,
             "decision": "PASS",
@@ -40,11 +29,10 @@ def predict(req: PredictRequest):
             }
         }
 
-    # 정상 예측 (mock)
     decision = "B"
     confidence = 0.61
 
-    conn = _conn()
+    conn = get_conn()
     cur = conn.cursor()
     cur.execute("""
         INSERT INTO predictions (race_id, decision, confidence, model, created_at)
