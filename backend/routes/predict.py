@@ -6,10 +6,11 @@ from datetime import datetime
 import sqlite3
 import os
 
-from backend.services.state_guard import get_system_state
-from backend.services.slack_notifier import send_slack_alert
+from backend.services.state_manager import get_current_state
+from backend.services.pdf_generator import generate_kpi_pdf
+from backend.services.slack_notifier import send_slack_file
 
-DB_PATH = os.getenv("DB_PATH", "/tmp/races.db")
+DB_PATH = "/tmp/races.db"
 
 router = APIRouter(prefix="/api", tags=["predict"])
 
@@ -21,39 +22,57 @@ class PredictRequest(BaseModel):
 
 @router.post("/predict")
 def predict(req: PredictRequest):
-    # 1️⃣ 현재 시스템 상태 확인 (GREEN / YELLOW / RED)
-    state = get_system_state()
+    """
+    B-5
+    - RED 상태면 무조건 PASS 반환
+    - PASS 발생 시 PDF 자동 생성 + Slack 전송
+    """
 
-    # 2️⃣ RED면 → 예측 차단 + Slack 알림 + PASS 반환
+    state = get_current_state()  # RED / YELLOW / GREEN
+
+    # 🔴 RED → 강제 PASS
     if state == "RED":
-        send_slack_alert(
-            title="🚨 SYSTEM RED – Prediction Blocked",
-            message=f"""
-• race_id: {req.race_id}
-• action: prediction blocked
-• reason: continuous KPI degradation
-• returned: PASS
-"""
+        decision = "PASS"
+        confidence = 0.0
+
+        # DB 저장
+        con = sqlite3.connect(DB_PATH)
+        cur = con.cursor()
+        cur.execute("""
+            INSERT INTO predictions
+            (race_id, decision, confidence, model, created_at)
+            VALUES (?, ?, ?, ?, ?)
+        """, (
+            req.race_id,
+            decision,
+            confidence,
+            "FORCED_PASS",
+            datetime.utcnow().isoformat()
+        ))
+        con.commit()
+        con.close()
+
+        # PDF 생성 + Slack 첨부
+        pdf_path = generate_kpi_pdf(reason="RED_FORCED_PASS")
+        send_slack_file(
+            text=f"🚨 RED 상태 → 예측 강제 PASS 발생 (race_id={req.race_id})",
+            file_path=pdf_path
         )
 
         return {
             "race_id": req.race_id,
             "decision": "PASS",
             "confidence": 0.0,
-            "meta": {
-                "system_state": "RED",
-                "reason": "auto_block"
-            }
+            "state": "RED",
+            "reason": "forced_pass"
         }
 
-    # 3️⃣ 정상 예측 로직 (예시)
+    # 🟡🟢 정상 예측 로직 (예시)
     decision = "B"
     confidence = 0.61
 
-    # 4️⃣ 예측 DB 저장
     con = sqlite3.connect(DB_PATH)
     cur = con.cursor()
-
     cur.execute("""
         INSERT INTO predictions
         (race_id, decision, confidence, model, created_at)
@@ -65,7 +84,6 @@ def predict(req: PredictRequest):
         req.model,
         datetime.utcnow().isoformat()
     ))
-
     con.commit()
     con.close()
 
@@ -73,7 +91,5 @@ def predict(req: PredictRequest):
         "race_id": req.race_id,
         "decision": decision,
         "confidence": confidence,
-        "meta": {
-            "system_state": state
-        }
+        "state": state
     }
