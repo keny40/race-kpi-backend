@@ -35,12 +35,19 @@ app.include_router(actual_result_router)
 app.include_router(kpi_match_router, prefix="/api/kpi", tags=["kpi"])
 app.include_router(kpi_summary_router, prefix="/api/kpi", tags=["kpi"])
 
-# === UI Routers ===
-app.include_router(dashboard_router, prefix="/ui", tags=["ui"])
+# === UI Routers (중요: prefix /ui로 설정) ===
 app.include_router(ui_results_router, prefix="/ui", tags=["ui"])
 app.include_router(kpi_report_router, prefix="/ui", tags=["ui"])
+app.include_router(dashboard_router, prefix="/ui", tags=["ui"])
 
-# === Health ===
+# === Health / Debug ===
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+@app.get("/_debug")
+def debug():
+    return {
+        "service": "race-kpi-backend",
+        "status": "running"
+    }

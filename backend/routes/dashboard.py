@@ -1,37 +1,26 @@
-from fastapi import APIRouter, Query
+from fastapi import APIRouter
 from backend.managers.season import SeasonManager
 
 router = APIRouter()
 
-# 1️⃣ 최근 결과 리스트 조회
-@router.get("/dashboard/recent")
-def get_recent_results(limit: int = Query(20, ge=1, le=100)):
+@router.get("/dashboard/overview")
+def get_overview():
     return {
-        "status": "ok",
-        "message": "최근 결과 조회 성공",
-        "limit": limit,
+        "message": "Overview route working",
+        "total_races": 123,
+        "accuracy": 0.72
+    }
+
+@router.get("/dashboard/recent")
+def get_recent(limit: int = 50):
+    return {
+        "message": f"Recent results, limit={limit}",
         "data": []
     }
 
-# 2️⃣ 대시보드 요약 정보
-@router.get("/dashboard/overview")
-def get_dashboard_overview():
-    return {
-        "status": "ok",
-        "message": "대시보드 개요 데이터 조회 성공",
-        "summary": {
-            "hit": 58,
-            "miss": 42,
-            "pass": 20,
-            "accuracy": 0.58
-        }
-    }
-
-# 3️⃣ 시즌 관리 관련 API (예시)
 @router.get("/dashboard/seasons")
-def get_season_list():
+def get_seasons():
     return {
-        "status": "ok",
-        "message": "시즌 목록 조회 성공",
-        "seasons": SeasonManager.list_seasons()
+        "message": "Seasons loaded",
+        "seasons": SeasonManager().get_seasons()
     }
