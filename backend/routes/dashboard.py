@@ -1,22 +1,20 @@
 from fastapi import APIRouter
-from season import SeasonManager
-from datetime import datetime
+from backend.season import SeasonManager  # ✅ 수정된 import 경로
 
 router = APIRouter(prefix="/ui/api/dashboard", tags=["dashboard"])
 
-
 @router.get("/overview")
-def dashboard_overview():
-    season_info = SeasonManager.get_status()
-
-    # 예시로 predictions 수를 반환 (원래 DB 연동 시 여기에 쿼리 로직 들어감)
-    # 지금은 테스트 용도로 static 숫자 사용
-    totals = {
-        "predictions": 2250,
-        "predictions_with_result": 1234
-    }
-
+def get_dashboard_overview():
+    sm = SeasonManager()
     return {
-        "season": season_info,
-        "totals": totals
+        "season": sm.get_current_season(),
+        "totals": {
+            "predictions": sm.total_predictions(),
+            "predictions_with_result": sm.total_predictions_with_result()
+        }
     }
+
+@router.get("/recent")
+def get_recent_predictions(limit: int = 50):
+    sm = SeasonManager()
+    return sm.fetch_recent_predictions(limit=limit)
