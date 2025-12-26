@@ -1,68 +1,35 @@
 import sqlite3
+import os
 
 DB_PATH = "races.db"
 
 def bootstrap_db():
-    con = sqlite3.connect(DB_PATH)
-    cur = con.cursor()
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
 
-    # =========================
-    # 기존 경주 데이터 테이블
-    # =========================
+    # 실결과 테이블
     cur.execute("""
-    CREATE TABLE IF NOT EXISTS races (
+    CREATE TABLE IF NOT EXISTS race_actuals (
         race_id TEXT PRIMARY KEY,
-        rc_date TEXT,
-        meet INTEGER,
-        rc_no INTEGER
-    )
-    """)
-
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS entries (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        race_id TEXT,
-        horse_no INTEGER,
-        win_odds REAL,
-        rank INTEGER
-    )
-    """)
-
-    # =========================
-    # 예측 결과 저장
-    # =========================
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS predictions (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        race_id TEXT,
-        model TEXT,
-        decision TEXT,
-        confidence REAL,
+        winner TEXT NOT NULL,
+        placed TEXT,
+        payoff REAL,
+        race_date TEXT,
         created_at TEXT
     )
     """)
 
-    # =========================
-    # 실측 결과
-    # =========================
+    # 예측 테이블 (이미 있더라도 안전)
     cur.execute("""
-    CREATE TABLE IF NOT EXISTS actual_results (
-        race_id TEXT PRIMARY KEY,
-        winner TEXT
+    CREATE TABLE IF NOT EXISTS predictions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        race_id TEXT NOT NULL,
+        decision TEXT,
+        confidence REAL,
+        model TEXT,
+        created_at TEXT
     )
     """)
 
-    # =========================
-    # KPI 누적
-    # =========================
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS kpi_stats (
-        model TEXT PRIMARY KEY,
-        hit INTEGER,
-        miss INTEGER,
-        pass INTEGER
-    )
-    """)
-
-    con.commit()
-    con.close()
+    conn.commit()
+    conn.close()
