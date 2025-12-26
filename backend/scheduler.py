@@ -1,10 +1,23 @@
 # backend/scheduler.py
 
-from backend.routes.kpi_report import report_pdf
+from apscheduler.schedulers.background import BackgroundScheduler
 from backend.services.state_guard import get_system_state
-from backend.services.slack_notify import send_slack_message
+
+scheduler = BackgroundScheduler()
 
 
 def daily_summary_job():
     state = get_system_state()
-    send_slack_message(f"[DAILY KPI] Current system state: {state}")
+    # Slack 연동은 B-5에서 연결
+    print("[DAILY SUMMARY]", state)
+
+
+def start_scheduler():
+    if not scheduler.running:
+        scheduler.add_job(
+            daily_summary_job,
+            "cron",
+            hour=9,
+            minute=0
+        )
+        scheduler.start()

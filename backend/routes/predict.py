@@ -26,10 +26,10 @@ def _conn():
 
 @router.post("/predict")
 def predict(req: PredictRequest):
-    system_state = get_system_state()
+    state = get_system_state()
 
-    # 🔴 RED 상태 → 강제 PASS
-    if system_state == "RED":
+    # 🔴 RED 상태면 강제 PASS
+    if state["status"] == "RED":
         return {
             "race_id": req.race_id,
             "decision": "PASS",
@@ -40,7 +40,7 @@ def predict(req: PredictRequest):
             }
         }
 
-    # 정상 예측 (더미 로직)
+    # 정상 예측 (mock)
     decision = "B"
     confidence = 0.61
 
