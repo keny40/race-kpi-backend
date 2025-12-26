@@ -11,6 +11,8 @@ from backend.routes.kpi_summary import router as kpi_summary_router
 from backend.routes.dashboard import router as dashboard_router
 from backend.routes.kpi_report import router as kpi_report_router
 from backend.routes.ui_results import router as ui_results_router
+from backend.routes.kpi_status import router as kpi_status_router
+
 
 app = FastAPI(title="Race KPI Backend", version="0.1.0")
 
@@ -35,7 +37,7 @@ app.include_router(kpi_summary_router)
 app.include_router(dashboard_router)
 app.include_router(kpi_report_router)
 app.include_router(ui_results_router)
-
+app.include_router(kpi_status_router)
 
 @app.get("/health")
 def health():
