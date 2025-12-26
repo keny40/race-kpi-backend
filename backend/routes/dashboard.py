@@ -1,20 +1,17 @@
-from fastapi import APIRouter
-from backend.season import SeasonManager  # ✅ 수정된 import 경로
+from fastapi import APIRouter, Query
+from backend.season import SeasonManager
 
-router = APIRouter(prefix="/ui/api/dashboard", tags=["dashboard"])
+router = APIRouter(
+    prefix="/ui/api/dashboard",
+    tags=["dashboard"]
+)
 
 @router.get("/overview")
 def get_dashboard_overview():
     sm = SeasonManager()
-    return {
-        "season": sm.get_current_season(),
-        "totals": {
-            "predictions": sm.total_predictions(),
-            "predictions_with_result": sm.total_predictions_with_result()
-        }
-    }
+    return sm.get_overview()
 
 @router.get("/recent")
-def get_recent_predictions(limit: int = 50):
+def get_dashboard_recent(limit: int = Query(50, ge=1, le=100)):
     sm = SeasonManager()
-    return sm.fetch_recent_predictions(limit=limit)
+    return sm.get_recent(limit)
