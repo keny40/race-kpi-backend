@@ -6,9 +6,10 @@ from datetime import datetime
 import sqlite3
 import os
 
-from backend.services.state_guard import guard_and_notify
+from backend.services.state_guard import get_system_state
 
 DB_PATH = os.getenv("DB_PATH", "races.db")
+
 router = APIRouter(prefix="/api", tags=["predict"])
 
 
@@ -17,11 +18,18 @@ class PredictRequest(BaseModel):
     model: str = "A"
 
 
+def _conn():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
 @router.post("/predict")
 def predict(req: PredictRequest):
-    state = guard_and_notify()
+    system_state = get_system_state()
 
-    if state["status"] == "RED":
+    # 🔴 RED 상태 → 강제 PASS
+    if system_state == "RED":
         return {
             "race_id": req.race_id,
             "decision": "PASS",
@@ -32,14 +40,14 @@ def predict(req: PredictRequest):
             }
         }
 
+    # 정상 예측 (더미 로직)
     decision = "B"
     confidence = 0.61
 
-    conn = sqlite3.connect(DB_PATH)
+    conn = _conn()
     cur = conn.cursor()
     cur.execute("""
-        INSERT INTO predictions
-        (race_id, decision, confidence, model, created_at)
+        INSERT INTO predictions (race_id, decision, confidence, model, created_at)
         VALUES (?, ?, ?, ?, ?)
     """, (
         req.race_id,
