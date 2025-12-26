@@ -1,80 +1,115 @@
+# backend/routes/kpi_report.py
+
 from fastapi import APIRouter
 from fastapi.responses import FileResponse
-from datetime import datetime
+import sqlite3
 import os
-
-from backend.db.conn import get_conn
-
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table
-from reportlab.lib.styles import getSampleStyleSheet
+from datetime import datetime
 from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
 
-router = APIRouter(
-    prefix="/api/kpi",
-    tags=["kpi-report"]
-)
+DB_PATH = os.getenv("DB_PATH", "races.db")
 
-REPORT_DIR = "reports"
-os.makedirs(REPORT_DIR, exist_ok=True)
+router = APIRouter(prefix="/api/kpi/report", tags=["kpi-report"])
 
 
-def build_kpi_pdf(path: str):
-    con = get_conn()
-    cur = con.cursor()
+def _conn():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
 
-    cur.execute("""
+
+def build_kpi_pdf(path: str, executive: bool = False):
+    conn = _conn()
+    cur = conn.cursor()
+
+    rows = cur.execute("""
         SELECT
-            COUNT(*) AS total,
-            COALESCE(SUM(result = 'HIT'), 0) AS hit,
-            COALESCE(SUM(result = 'MISS'), 0) AS miss
+            race_id,
+            decision,
+            winner,
+            confidence,
+            result
         FROM v_race_match
-    """)
-    total, hit, miss = cur.fetchone()
-    con.close()
+        ORDER BY race_id
+    """).fetchall()
 
-    hit = hit or 0
-    miss = miss or 0
+    total = len(rows)
+    hit = sum(1 for r in rows if r["result"] == "HIT")
+    miss = sum(1 for r in rows if r["result"] == "MISS")
+    pass_cnt = sum(1 for r in rows if r["result"] == "PASS")
 
-    denom = hit + miss
-    accuracy = round(hit / denom, 4) if denom > 0 else 0.0
+    accuracy = round(hit / (hit + miss), 3) if (hit + miss) > 0 else 0
 
-    if accuracy >= 0.6:
-        status = "OK"
-    elif accuracy >= 0.45:
-        status = "WARN"
-    else:
-        status = "FAIL"
+    c = canvas.Canvas(path, pagesize=A4)
+    width, height = A4
 
-    styles = getSampleStyleSheet()
-    doc = SimpleDocTemplate(path, pagesize=A4)
+    y = height - 50
+    c.setFont("Helvetica-Bold", 16)
+    c.drawString(40, y, "Race KPI Report" + (" (Executive)" if executive else ""))
+    y -= 40
 
-    story = []
-    story.append(Paragraph("Executive KPI Summary", styles["Title"]))
-    story.append(Spacer(1, 16))
+    c.setFont("Helvetica", 11)
+    c.drawString(40, y, f"Total predictions: {total}")
+    y -= 20
+    c.drawString(40, y, f"HIT: {hit}")
+    y -= 20
+    c.drawString(40, y, f"MISS: {miss}")
+    y -= 20
+    c.drawString(40, y, f"PASS: {pass_cnt}")
+    y -= 20
+    c.drawString(40, y, f"Accuracy: {accuracy}")
+    y -= 40
 
-    table = Table([
-        ["Total", total],
-        ["HIT", hit],
-        ["MISS", miss],
-        ["Accuracy", accuracy],
-        ["Status", status],
-    ])
+    if not executive:
+        c.setFont("Helvetica-Bold", 12)
+        c.drawString(40, y, "Details")
+        y -= 20
+        c.setFont("Helvetica", 10)
 
-    story.append(table)
-    doc.build(story)
+        for r in rows:
+            line = (
+                f"{r['race_id']} | "
+                f"decision={r['decision']} | "
+                f"winner={r['winner']} | "
+                f"conf={r['confidence']} | "
+                f"result={r['result']}"
+            )
+            c.drawString(40, y, line)
+            y -= 14
+            if y < 50:
+                c.showPage()
+                y = height - 50
+                c.setFont("Helvetica", 10)
+
+    c.showPage()
+    c.save()
+    conn.close()
 
 
-@router.post("/report/pdf")
+@router.post("/pdf")
 def report_pdf():
-    filename = f"kpi_{datetime.now():%Y%m%d_%H%M%S}.pdf"
-    path = os.path.join(REPORT_DIR, filename)
-    build_kpi_pdf(path)
-    return FileResponse(path, filename=filename, media_type="application/pdf")
+    filename = f"kpi_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.pdf"
+    path = os.path.join("/tmp", filename)
+
+    build_kpi_pdf(path, executive=False)
+
+    return FileResponse(
+        path,
+        media_type="application/pdf",
+        filename=filename
+    )
 
 
-@router.post("/report/executive")
+@router.post("/executive")
 def executive_pdf():
-    filename = f"exec_{datetime.now():%Y%m%d}.pdf"
-    path = os.path.join(REPORT_DIR, filename)
-    build_kpi_pdf(path)
-    return FileResponse(path, filename=filename, media_type="application/pdf")
+    filename = f"executive_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.pdf"
+    path = os.path.join("/tmp", filename)
+
+    build_kpi_pdf(path, executive=True)
+
+    return FileResponse(
+        path,
+        media_type="application/pdf",
+        filename=filename
+    )
