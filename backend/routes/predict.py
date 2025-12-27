@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
-from backend.services.kpi_status import get_current_status
+from backend.routes.kpi_status import get_current_status
 from backend.services.red_score import record_status, is_red_locked
 from backend.services.system_control import get_state
 from backend.services.slack_alert import send_red_alert_with_pdf
