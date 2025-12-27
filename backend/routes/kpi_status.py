@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from datetime import datetime, timedelta
+from datetime import datetime
 import sqlite3
 import os
 
@@ -53,13 +53,9 @@ def _recent_accuracy(window: int = 20) -> float:
 
 
 # --------------------------------------------------
-# ✅ 핵심: predict.py에서 사용하는 표준 함수
+# 🔑 내부 표준 상태 함수 (predict / alert 공용)
 # --------------------------------------------------
 def get_current_status() -> str:
-    """
-    현재 KPI 상태 반환
-    - GREEN / YELLOW / RED
-    """
     acc = _recent_accuracy(window=20)
 
     if acc >= 0.65:
@@ -70,7 +66,17 @@ def get_current_status() -> str:
 
 
 # --------------------------------------------------
-# (선택) API로도 조회 가능
+# 🔑 kpi_alert.py 호환용 wrapper (이번 에러의 핵심)
+# --------------------------------------------------
+def get_kpi_status() -> str:
+    """
+    기존 코드 호환용 alias
+    """
+    return get_current_status()
+
+
+# --------------------------------------------------
+# API 조회용
 # --------------------------------------------------
 @router.get("")
 def api_status():
