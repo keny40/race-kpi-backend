@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+from datetime import datetime, timedelta
 import sqlite3
 import os
 
@@ -13,40 +14,67 @@ def _conn():
     return conn
 
 
-def judge_status(total: int, hit: int, miss: int):
-    decided = hit + miss
-    accuracy = hit / decided if decided > 0 else 0
-
-    if decided >= 10 and accuracy >= 0.60:
-        return "GREEN", accuracy
-    if decided >= 5 and accuracy >= 0.50:
-        return "YELLOW", accuracy
-    return "RED", accuracy
-
-
-@router.get("")
-def get_kpi_status():
+def _recent_accuracy(window: int = 20) -> float:
+    """
+    최근 예측 정확도 계산
+    HIT / (HIT + MISS)
+    """
     conn = _conn()
     cur = conn.cursor()
 
     rows = cur.execute("""
-        SELECT result
-        FROM v_race_match
-        WHERE result IN ('HIT', 'MISS')
-    """).fetchall()
-
-    hit = sum(1 for r in rows if r["result"] == "HIT")
-    miss = sum(1 for r in rows if r["result"] == "MISS")
-    total = len(rows)
-
-    status, accuracy = judge_status(total, hit, miss)
+        SELECT
+            p.decision,
+            a.winner
+        FROM predictions p
+        JOIN race_actuals a
+          ON p.race_id = a.race_id
+        ORDER BY p.created_at DESC
+        LIMIT ?
+    """, (window,)).fetchall()
 
     conn.close()
 
+    hit = 0
+    miss = 0
+
+    for r in rows:
+        if r["decision"] == "PASS":
+            continue
+        if r["decision"] == r["winner"]:
+            hit += 1
+        else:
+            miss += 1
+
+    if hit + miss == 0:
+        return 1.0
+
+    return hit / (hit + miss)
+
+
+# --------------------------------------------------
+# ✅ 핵심: predict.py에서 사용하는 표준 함수
+# --------------------------------------------------
+def get_current_status() -> str:
+    """
+    현재 KPI 상태 반환
+    - GREEN / YELLOW / RED
+    """
+    acc = _recent_accuracy(window=20)
+
+    if acc >= 0.65:
+        return "GREEN"
+    if acc >= 0.55:
+        return "YELLOW"
+    return "RED"
+
+
+# --------------------------------------------------
+# (선택) API로도 조회 가능
+# --------------------------------------------------
+@router.get("")
+def api_status():
     return {
-        "status": status,
-        "total": total,
-        "hit": hit,
-        "miss": miss,
-        "accuracy": round(accuracy, 3)
+        "status": get_current_status(),
+        "checked_at": datetime.utcnow().isoformat()
     }
