@@ -1,163 +1,207 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Admin Console</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <meta charset="UTF-8" />
+  <title>운영 관리자 콘솔</title>
   <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 18px; }
-    .row { display: flex; gap: 14px; flex-wrap: wrap; }
-    .card { border: 1px solid #ddd; border-radius: 10px; padding: 14px; min-width: 320px; flex: 1; }
-    .btn { padding: 10px 12px; border-radius: 8px; border: 1px solid #222; background: #111; color: #fff; cursor: pointer; }
-    .btn2 { padding: 10px 12px; border-radius: 8px; border: 1px solid #aaa; background: #fff; color: #111; cursor: pointer; }
-    .tag { display: inline-block; padding: 4px 8px; border-radius: 999px; border: 1px solid #ccc; font-size: 12px; }
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; white-space: pre-wrap; }
-    .small { font-size: 12px; color: #555; }
-    .sep { height: 1px; background: #eee; margin: 10px 0; }
-    .ok { color: #0a7; font-weight: 700; }
-    .bad { color: #c22; font-weight: 700; }
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      margin: 24px;
+      background: #fafafa;
+    }
+    h1 {
+      margin-bottom: 8px;
+    }
+    .desc {
+      color: #666;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+    .row {
+      display: flex;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+    .card {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 16px;
+      flex: 1;
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 13px;
+      margin-right: 8px;
+      background: #eee;
+    }
+    .btn {
+      padding: 8px 14px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      cursor: pointer;
+      background: #fff;
+      margin-right: 6px;
+    }
+    .btn.primary {
+      background: #111;
+      color: #fff;
+      border-color: #111;
+    }
+    .btn.danger {
+      background: #c62828;
+      color: #fff;
+      border-color: #c62828;
+    }
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    pre {
+      background: #f4f4f4;
+      padding: 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      overflow-x: auto;
+    }
+    .right {
+      min-width: 320px;
+    }
   </style>
 </head>
 <body>
-  <h2>운영 관리자 콘솔</h2>
-  <div class="small">/api/admin/state / red-score / red-report.pdf 를 기반으로 동작합니다</div>
 
-  <div class="row" style="margin-top: 14px;">
-    <div class="card">
-      <div class="row" style="align-items:center; justify-content:space-between;">
-        <div>
-          <div class="tag" id="lockTag">LOCK: -</div>
-          <div class="tag" id="scoreTag" style="margin-left:6px;">SCORE: -</div>
-        </div>
-        <div>
-          <button class="btn2" onclick="refreshAll()">새로고침</button>
-          <button class="btn" onclick="openPdf()">PDF</button>
-        </div>
-      </div>
+<h1>운영 관리자 콘솔</h1>
+<div class="desc">
+  /api/admin/state · /red-score · /red-report.pdf 기반으로 동작합니다
+</div>
 
-      <div class="sep"></div>
-
-      <div class="grid">
-        <div>
-          <div><b>AUTO RED</b></div>
-          <div class="small">자동 RED 판단 on/off</div>
-          <button class="btn" onclick="toggle('auto-red', true)">ON</button>
-          <button class="btn2" onclick="toggle('auto-red', false)">OFF</button>
-        </div>
-        <div>
-          <div><b>FORCE PASS</b></div>
-          <div class="small">무조건 PASS 강제</div>
-          <button class="btn" onclick="toggle('force-pass', true)">ON</button>
-          <button class="btn2" onclick="toggle('force-pass', false)">OFF</button>
-        </div>
-        <div>
-          <div><b>RED LOCK FLAG</b></div>
-          <div class="small">운영자가 강제 LOCK/해제</div>
-          <button class="btn" onclick="toggle('red-lock', true)">LOCK</button>
-          <button class="btn2" onclick="toggle('red-lock', false)">UNLOCK</button>
-        </div>
-      </div>
-
-      <div class="sep"></div>
-
-      <div class="small">현재 상태</div>
-      <div class="mono" id="stateBox">loading...</div>
+<div class="row">
+  <div class="card">
+    <div>
+      <span class="badge" id="lockBadge">LOCK: -</span>
+      <span class="badge" id="scoreBadge">SCORE: -</span>
     </div>
 
-    <div class="card">
-      <div><b>RED 점수 추이</b></div>
-      <div class="small">최근 status 로그 기반 점수</div>
-      <div style="height: 280px; margin-top: 10px;">
-        <canvas id="chart"></canvas>
-      </div>
-      <div class="sep"></div>
-      <div class="small">점수 상세(explain)</div>
-      <div class="mono" id="explainBox">loading...</div>
+    <h3>AUTO RED</h3>
+    <p>자동 RED 판단 on/off</p>
+    <button class="btn primary" onclick="toggleAutoRed(true)">ON</button>
+    <button class="btn" onclick="toggleAutoRed(false)">OFF</button>
+
+    <h3 style="margin-top:16px;">FORCE PASS</h3>
+    <p>무조건 PASS 강제</p>
+    <button class="btn primary" onclick="toggleForcePass(true)">ON</button>
+    <button class="btn" onclick="toggleForcePass(false)">OFF</button>
+
+    <h3 style="margin-top:16px;">RED LOCK FLAG</h3>
+    <p>운영자가 강제 LOCK / 해제</p>
+    <button class="btn danger" onclick="setLock(true)">LOCK</button>
+    <button class="btn" onclick="setLock(false)">UNLOCK</button>
+
+    <div style="margin-top:20px;">
+      <button class="btn" onclick="refresh()">새로고침</button>
+      <button class="btn primary" onclick="openPdf()">PDF</button>
     </div>
+
+    <h3 style="margin-top:20px;">현재 상태</h3>
+    <pre id="stateBox">loading...</pre>
   </div>
 
-  <script>
-    const api = (p) => p.startsWith("http") ? p : `${location.origin}${p}`;
+  <div class="card right">
+    <h3>RED 점수 추이</h3>
+    <p class="desc">최근 status 로그 기반 점수</p>
+    <pre id="scoreExplain">loading...</pre>
+  </div>
+</div>
 
-    let chart;
+<script>
+async function adminLogin() {
+  const pw = prompt("관리자 비밀번호를 입력하세요");
+  if (!pw) return;
 
-    async function jget(path){
-      const r = await fetch(api(path));
-      if(!r.ok) throw new Error(await r.text());
-      return r.json();
-    }
-    async function jpost(path, body){
-      const r = await fetch(api(path), {
-        method: "POST",
-        headers: {"Content-Type":"application/json"},
-        body: JSON.stringify(body)
-      });
-      if(!r.ok) throw new Error(await r.text());
-      return r.json();
-    }
+  const res = await fetch("/api/admin/login", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ password: pw })
+  });
 
-    function openPdf(){
-      window.open(api("/api/admin/red-report.pdf"), "_blank");
-    }
+  if (!res.ok) {
+    alert("관리자 인증 실패");
+    return;
+  }
+  location.reload();
+}
 
-    async function toggle(endpoint, value){
-      await jpost(`/api/admin/${endpoint}`, {value});
-      await refreshAll();
-    }
+async function fetchState() {
+  const res = await fetch("/api/admin/state");
+  if (res.status === 403) {
+    adminLogin();
+    return;
+  }
+  const data = await res.json();
+  document.getElementById("stateBox").textContent = JSON.stringify(data, null, 2);
+}
 
-    function setTag(el, text, good){
-      el.textContent = text;
-      el.className = "tag " + (good ? "ok" : "bad");
-    }
+async function fetchScore() {
+  const res = await fetch("/api/admin/red-score");
+  if (!res.ok) return;
+  const data = await res.json();
 
-    function renderChart(recent){
-      // recent: time-ordered
-      // score curve: 누적 합이 아니라 "현재까지 점수" 느낌이 나도록 간단히 슬라이딩 계산(프론트)로 그립니다
-      const labels = recent.map(r => (r.created_at || "").slice(11,19));
-      const vals = [];
-      let decay = 1.0;
-      let score = 0.0;
+  document.getElementById("scoreExplain").textContent =
+    JSON.stringify(data, null, 2);
 
-      // 뒤에서부터 가중치 적용하면 explain과 개념이 달라질 수 있어, 프론트는 그냥 status를 숫자로 표시(RED=1,YELLOW=0.4)
-      recent.forEach(r=>{
-        let v = 0;
-        if(r.status === "RED") v = 1.0;
-        else if(r.status === "YELLOW") v = 0.4;
-        score = Math.max(0, score*0.6 + v); // 프론트 추이용 smoothing
-        vals.push(Number(score.toFixed(3)));
-      });
+  if (data.locked !== undefined) {
+    document.getElementById("lockBadge").textContent =
+      "LOCK: " + (data.locked ? "ON" : "OFF");
+  }
+  if (data.score !== undefined) {
+    document.getElementById("scoreBadge").textContent =
+      "SCORE: " + data.score;
+  }
+}
 
-      const ctx = document.getElementById("chart");
-      if(chart) chart.destroy();
-      chart = new Chart(ctx, {
-        type: "line",
-        data: { labels, datasets: [{ label: "Score (UI smoothed)", data: vals }] },
-        options: { responsive: true, maintainAspectRatio: false }
-      });
-    }
+async function toggleAutoRed(v) {
+  await fetch("/api/admin/auto-red", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ value: v })
+  });
+  refresh();
+}
 
-    async function refreshAll(){
-      const st = await jget("/api/admin/state");
-      document.getElementById("stateBox").textContent = JSON.stringify(st, null, 2);
+async function toggleForcePass(v) {
+  await fetch("/api/admin/force-pass", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ value: v })
+  });
+  refresh();
+}
 
-      const rs = await jget("/api/admin/red-score");
-      const locked = rs.explain.locked;
-      const score = rs.score;
-      const threshold = rs.explain.threshold;
+async function setLock(v) {
+  await fetch("/api/admin/lock", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ value: v })
+  });
+  refresh();
+}
 
-      setTag(document.getElementById("lockTag"), `LOCKED: ${locked}`, !locked);
-      document.getElementById("scoreTag").textContent = `SCORE: ${score} / ${threshold}`;
+function openPdf() {
+  window.open("/red-report.pdf", "_blank");
+}
 
-      document.getElementById("explainBox").textContent = JSON.stringify(rs.explain, null, 2);
-      renderChart(rs.recent || []);
-    }
+function refresh() {
+  fetchState();
+  fetchScore();
+}
 
-    refreshAll().catch(e=>{
-      document.getElementById("stateBox").textContent = "ERROR: " + e.message;
-      document.getElementById("explainBox").textContent = "ERROR: " + e.message;
-    });
-  </script>
+window.addEventListener("load", () => {
+  refresh();
+});
+</script>
+
 </body>
 </html>
