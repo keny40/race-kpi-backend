@@ -1,50 +1,56 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
-from backend.routes.kpi_status import get_current_status
-from backend.services.red_score import record_status, is_red_locked
-from backend.services.system_control import get_state
-from backend.services.slack_alert import send_red_alert_with_pdf
+from datetime import datetime
+from backend.db.conn import get_conn
+from backend.services.strategy_state import is_force_pass_enabled
+from backend.ai_ensemble import ensemble_predict
 
-
-router = APIRouter(prefix="/api", tags=["predict"])
+router = APIRouter(prefix="/api/predict", tags=["predict"])
 
 
 class PredictRequest(BaseModel):
     race_id: str
-    model: str = "A"
+    horses: list[int]
 
 
-@router.post("/predict")
+@router.post("")
 def predict(req: PredictRequest):
-    ctrl = get_state()
+    # 🔴 FORCE PASS 체크 (최우선)
+    if is_force_pass_enabled():
+        decision = "PASS"
+        confidence = 1.0
+        reason = "FORCED_BY_ADMIN"
 
-    if ctrl["force_pass"]:
-        return {
-            "race_id": req.race_id,
-            "decision": "PASS",
-            "confidence": 0.0,
-            "meta": {"forced": True}
-        }
+    else:
+        # 정상 예측 로직
+        result = ensemble_predict(req.horses)
+        decision = result["decision"]
+        confidence = result["confidence"]
+        reason = result.get("reason", "MODEL_DECISION")
 
-    status = get_current_status()
-    record_status(status)
-
-    if ctrl["auto_red"] and (status == "RED" or is_red_locked()):
-        if not ctrl["red_lock"]:
-            send_red_alert_with_pdf("RED 가중치 기준 잠금 발생")
-
-        return {
-            "race_id": req.race_id,
-            "decision": "PASS",
-            "confidence": 0.0,
-            "meta": {
-                "blocked": True,
-                "reason": "RED_WEIGHT_LOCK"
-            }
-        }
+    # DB 저장
+    con = get_conn()
+    cur = con.cursor()
+    cur.execute(
+        """
+        INSERT INTO predictions
+        (race_id, decision, confidence, reason, created_at)
+        VALUES (?, ?, ?, ?, ?)
+        """,
+        (
+            req.race_id,
+            decision,
+            confidence,
+            reason,
+            datetime.utcnow().isoformat(),
+        ),
+    )
+    con.commit()
+    con.close()
 
     return {
         "race_id": req.race_id,
-        "decision": "B",
-        "confidence": 0.61
+        "decision": decision,
+        "confidence": confidence,
+        "reason": reason,
     }
