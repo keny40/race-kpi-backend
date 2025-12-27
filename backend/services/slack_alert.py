@@ -1,49 +1,70 @@
-# backend/services/slack_alert.py
-
 import os
+import json
 import requests
+from datetime import datetime
 
-SLACK_BOT_TOKEN = os.getenv("SLACK_BOT_TOKEN")  # xoxb-***
-SLACK_CHANNEL_ID = os.getenv("SLACK_CHANNEL_ID")  # Cxxxxxx
+from backend.services.pdf_red_report import build_red_report_pdf
+
+# -----------------------------
+# 환경변수
+# -----------------------------
+SLACK_WEBHOOK_URL = os.getenv("SLACK_WEBHOOK_URL")
 
 
-def send_pdf_to_slack(pdf_path: str, title: str, message: str):
-    """
-    Slack 채널에 PDF 파일 업로드 + 메시지 전송
-    """
-
-    if not SLACK_BOT_TOKEN or not SLACK_CHANNEL_ID:
-        print("[Slack] Token or Channel ID missing")
+def _post(payload: dict):
+    if not SLACK_WEBHOOK_URL:
+        # 운영 중 Slack 미설정이어도 서버는 죽지 않게
+        print("[WARN] SLACK_WEBHOOK_URL not set")
         return
 
-    url = "https://slack.com/api/files.upload"
+    res = requests.post(
+        SLACK_WEBHOOK_URL,
+        data=json.dumps(payload),
+        headers={"Content-Type": "application/json"},
+        timeout=5,
+    )
+    res.raise_for_status()
 
-    headers = {
-        "Authorization": f"Bearer {SLACK_BOT_TOKEN}"
+
+# --------------------------------------------------
+# 1️⃣ RED 연속/가중치 경고 (PDF 포함)
+# --------------------------------------------------
+def send_red_alert_with_pdf(reason: str):
+    """
+    RED 잠금 발생 시 호출
+    - PDF 생성
+    - Slack에 링크/안내 메시지 전송
+    """
+    ts = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+
+    # PDF 생성
+    pdf_path = build_red_report_pdf()
+
+    text = (
+        ":rotating_light: *RED SYSTEM LOCK DETECTED*\n"
+        f"> Reason: `{reason}`\n"
+        f"> Time: `{ts}`\n"
+        f"> PDF generated at: `{pdf_path}`"
+    )
+
+    payload = {
+        "text": text
     }
 
-    data = {
-        "channels": SLACK_CHANNEL_ID,
-        "initial_comment": message,
-        "title": title
+    _post(payload)
+
+
+# --------------------------------------------------
+# 2️⃣ 일일 요약 (B-4 스케줄러)
+# --------------------------------------------------
+def send_daily_summary():
+    """
+    하루 1회 Slack 요약
+    """
+    ts = datetime.utcnow().strftime("%Y-%m-%d")
+
+    payload = {
+        "text": f":bar_chart: *Daily KPI Summary* ({ts})\n자동 리포트 전송 완료"
     }
 
-    with open(pdf_path, "rb") as f:
-        files = {
-            "file": f
-        }
-
-        response = requests.post(
-            url,
-            headers=headers,
-            data=data,
-            files=files,
-            timeout=10
-        )
-
-    result = response.json()
-
-    if not result.get("ok"):
-        print("[Slack] Upload failed:", result)
-    else:
-        print("[Slack] PDF uploaded successfully")
+    _post(payload)
