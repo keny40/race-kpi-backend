@@ -137,3 +137,51 @@ def model_b_predict(
         "confidence": round(probs[idx], 4),
         "model": "B"
     }
+
+def ensemble_predict(horses: list[int] | None = None):
+    """
+    A/B 모델 결과를 단순 앙상블
+    - 둘 다 PASS → PASS
+    - 하나만 PASS → 다른 모델 채택
+    - 둘 다 픽 → confidence 높은 쪽 채택
+    """
+
+    a = model_a_predict()
+    b = model_b_predict()
+
+    # 둘 다 PASS
+    if a["decision"] == "PASS" and b["decision"] == "PASS":
+        return {
+            "decision": "PASS",
+            "confidence": max(a["confidence"], b["confidence"]),
+            "reason": "A_B_PASS"
+        }
+
+    # 하나만 PASS
+    if a["decision"] == "PASS":
+        return {
+            "decision": b["decision"],
+            "confidence": b["confidence"],
+            "reason": "B_ONLY"
+        }
+
+    if b["decision"] == "PASS":
+        return {
+            "decision": a["decision"],
+            "confidence": a["confidence"],
+            "reason": "A_ONLY"
+        }
+
+    # 둘 다 픽 → confidence 높은 쪽
+    if a["confidence"] >= b["confidence"]:
+        return {
+            "decision": a["decision"],
+            "confidence": a["confidence"],
+            "reason": "A_OVER_B"
+        }
+
+    return {
+        "decision": b["decision"],
+        "confidence": b["confidence"],
+        "reason": "B_OVER_A"
+    }
