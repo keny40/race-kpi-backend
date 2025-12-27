@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <title>Predict Test</title>
+</head>
+<body>
+  <h2>Predict API 테스트</h2>
+
+  <label>Race ID</label><br/>
+  <input id="race" value="RACE_TEST_001"/><br/><br/>
+
+  <button onclick="callPredict()">/api/predict 호출</button>
+
+  <pre id="out">대기중...</pre>
+
+  <script>
+    async function callPredict(){
+      const race_id = document.getElementById("race").value;
+      const r = await fetch("/api/predict", {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({ race_id })
+      });
+      const j = await r.json();
+      document.getElementById("out").textContent = JSON.stringify(j, null, 2);
+    }
+  </script>
+</body>
+</html>

@@ -1,10 +1,9 @@
-# backend/routes/predict.py
-
 from fastapi import APIRouter
 from pydantic import BaseModel
-from datetime import datetime
-from backend.db.conn import get_conn
-from backend.routes.kpi_status import get_kpi_status
+from backend.services.kpi_status import get_current_status
+from backend.services.red_score import record_status, is_red_locked
+from backend.services.system_control import get_state
+from backend.services.slack_alert import send_red_alert_with_pdf
 
 router = APIRouter(prefix="/api", tags=["predict"])
 
@@ -16,39 +15,35 @@ class PredictRequest(BaseModel):
 
 @router.post("/predict")
 def predict(req: PredictRequest):
-    kpi = get_kpi_status()
+    ctrl = get_state()
 
-    if kpi["status"] == "RED":
+    if ctrl["force_pass"]:
         return {
             "race_id": req.race_id,
             "decision": "PASS",
-            "confidence": 0,
+            "confidence": 0.0,
+            "meta": {"forced": True}
+        }
+
+    status = get_current_status()
+    record_status(status)
+
+    if ctrl["auto_red"] and (status == "RED" or is_red_locked()):
+        if not ctrl["red_lock"]:
+            send_red_alert_with_pdf("RED 가중치 기준 잠금 발생")
+
+        return {
+            "race_id": req.race_id,
+            "decision": "PASS",
+            "confidence": 0.0,
             "meta": {
-                "reason": "kpi_status_red",
-                "status": "RED"
+                "blocked": True,
+                "reason": "RED_WEIGHT_LOCK"
             }
         }
 
-    decision = "B"
-    confidence = 0.61
-
-    conn = get_conn()
-    cur = conn.cursor()
-    cur.execute("""
-        INSERT INTO predictions (race_id, decision, confidence, model, created_at)
-        VALUES (?, ?, ?, ?, ?)
-    """, (
-        req.race_id,
-        decision,
-        confidence,
-        req.model,
-        datetime.utcnow().isoformat()
-    ))
-    conn.commit()
-    conn.close()
-
     return {
         "race_id": req.race_id,
-        "decision": decision,
-        "confidence": confidence
+        "decision": "B",
+        "confidence": 0.61
     }
