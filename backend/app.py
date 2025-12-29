@@ -4,24 +4,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
-# === routers ===
-from backend.routes.predict import router as predict_router
-from backend.routes.actual_result import router as actual_router
-from backend.routes.kpi_summary import router as kpi_summary_router
-from backend.routes.kpi_match import router as kpi_match_router
-from backend.routes.kpi_alert import router as kpi_alert_router
-from backend.routes.kpi_status import router as kpi_status_router
-from backend.routes.admin import router as admin_router
-from backend.routes.admin_auth import router as admin_auth_router
-from backend.routes.admin_control import router as admin_control_router
-from backend.routes.kpi_status import router as status_router
-from backend.routes.kpi_status import router as kpi_status_router
-from backend.routes.kpi_alert import router as kpi_alert_router
-
-
-
 # ===============================
-# BASE DIR (Render / Local 공통)
+# BASE DIR
 # ===============================
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -29,7 +13,6 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # APP INIT
 # ===============================
 app = FastAPI(title="Race KPI Backend")
-
 
 # ===============================
 # CORS
@@ -43,11 +26,24 @@ app.add_middleware(
 )
 
 # ===============================
+# ROUTERS (중복 없이)
+# ===============================
+from backend.routes.predict import router as predict_router
+from backend.routes.actual_result import router as actual_router
+from backend.routes.kpi_summary import router as kpi_summary_router
+from backend.routes.kpi_match import router as kpi_match_router
+from backend.routes.kpi_alert import router as kpi_alert_router
+from backend.routes.kpi_status import router as kpi_status_router
+from backend.routes.admin import router as admin_router
+from backend.routes.admin_auth import router as admin_auth_router
+from backend.routes.admin_control import router as admin_control_router
+
+# ===============================
 # ROOT → ADMIN UI
 # ===============================
 @app.get("/")
 def root():
-    return RedirectResponse(url="/admin")
+    return RedirectResponse(url="/admin/index.html")
 
 # ===============================
 # HEALTH CHECK
@@ -70,13 +66,9 @@ app.include_router(kpi_status_router)
 app.include_router(admin_router)
 app.include_router(admin_auth_router)
 app.include_router(admin_control_router)
-app.include_router(status_router)
-app.include_router(kpi_status_router)
-app.include_router(kpi_alert_router)
-
 
 # ===============================
-# STATIC FILES (정답 경로)
+# STATIC FILES (정답)
 # ===============================
 app.mount(
     "/admin",
@@ -94,4 +86,3 @@ app.mount(
     ),
     name="static",
 )
-
