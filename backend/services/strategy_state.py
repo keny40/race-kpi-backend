@@ -42,8 +42,12 @@ def disable_force_pass():
     _FORCE_PASS_AT = None
 
 
-# === 🔹 admin / legacy 호환용 alias ===
+# === 🔹 admin / legacy 호환 alias ===
 def force_pass(reason: str = "MANUAL"):
+    enable_force_pass(reason=reason)
+
+
+def force_pass_on(reason: str = "MANUAL"):
     enable_force_pass(reason=reason)
 
 
