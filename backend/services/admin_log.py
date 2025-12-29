@@ -1,49 +1,34 @@
-from backend.db.conn import get_conn
+import sqlite3
+from datetime import datetime
+
+DB_PATH = "races.db"
 
 
-def fetch_admin_logs(
-    limit: int = 50,
-    action: str | None = None,
-    admin_id: str | None = None,
-    since: str | None = None
-):
-    con = get_conn()
+def log_admin_action(action: str, reason: str = ""):
+    """
+    관리자 액션 로그 기록
+    """
+    con = sqlite3.connect(DB_PATH)
     cur = con.cursor()
 
-    where = []
-    params = []
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS admin_action_log (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            action TEXT NOT NULL,
+            reason TEXT,
+            created_at TEXT NOT NULL
+        )
+        """
+    )
 
-    if action:
-        where.append("action = ?")
-        params.append(action)
-    if admin_id:
-        where.append("admin_id = ?")
-        params.append(admin_id)
-    if since:
-        where.append("created_at >= ?")
-        params.append(since)
+    cur.execute(
+        """
+        INSERT INTO admin_action_log (action, reason, created_at)
+        VALUES (?, ?, ?)
+        """,
+        (action, reason, datetime.utcnow().isoformat()),
+    )
 
-    where_sql = (" WHERE " + " AND ".join(where)) if where else ""
-
-    sql = f"""
-        SELECT id, admin_id, action, detail, created_at
-        FROM admin_logs
-        {where_sql}
-        ORDER BY created_at DESC
-        LIMIT ?
-    """
-    params.append(limit)
-
-    rows = cur.execute(sql, params).fetchall()
+    con.commit()
     con.close()
-
-    return [
-        {
-            "id": r[0],
-            "admin_id": r[1],
-            "action": r[2],
-            "detail": r[3],
-            "created_at": r[4],
-        }
-        for r in rows
-    ]
