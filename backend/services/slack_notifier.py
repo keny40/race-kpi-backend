@@ -1,5 +1,5 @@
 # backend/services/slack_notifier.py
-from backend.services.slack_notify import (
+from backend.services.slack_notifier import (
     _post_webhook,
     send_red_pdf_bundle,
 )
