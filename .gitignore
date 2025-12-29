@@ -1,8 +1,11 @@
 __pycache__/
 *.pyc
-venv/ 
-*.db 
-*.pdf 
-reports/ 
-__pycache__/ 
-*.pyc 
+
+venv/
+
+*.db
+*.db-journal
+*.sqlpro
+
+*.pdf
+reports/
