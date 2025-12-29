@@ -1,17 +1,50 @@
 # backend/services/slack_notifier.py
-from backend.services.slack_notifier import (
-    _post_webhook,
-    send_red_pdf_bundle,
-)
+import os
+import json
+from datetime import datetime, timezone, timedelta
 
-def send_red_alert(payload: dict):
-    """
-    alert_engine에서 호출하는 표준 인터페이스
-    """
-    # 텍스트 요약
-    status = payload.get("status")
-    reason = payload.get("reason", "")
-    _post_webhook(f"🚨 KPI ALERT\n상태: {status}\n사유: {reason}")
+import requests
 
-    # PDF 번들 전송 (기존 로직 재사용)
-    send_red_pdf_bundle()
+KST = timezone(timedelta(hours=9))
+
+SLACK_WEBHOOK_URL = os.getenv("SLACK_WEBHOOK_URL", "")
+SLACK_BOT_TOKEN = os.getenv("SLACK_BOT_TOKEN", "")
+SLACK_CHANNEL = os.getenv("SLACK_CHANNEL", "#alerts")
+
+
+def _post_webhook(text: str):
+    if not SLACK_WEBHOOK_URL:
+        return
+    requests.post(
+        SLACK_WEBHOOK_URL,
+        headers={"Content-Type": "application/json"},
+        data=json.dumps({"text": text}),
+        timeout=15,
+    )
+
+
+def _fmt(payload: dict) -> str:
+    return (
+        f"[KPI] status={payload.get('status')}  "
+        f"total={payload.get('total')}  hit={payload.get('hit')}  "
+        f"miss={payload.get('miss')}  acc={payload.get('accuracy')}"
+    )
+
+
+def maybe_notify_status_change(prev_status: str, curr_status: str, payload: dict):
+    if prev_status == "YELLOW" and curr_status == "RED":
+        _post_webhook(f"⚠️ YELLOW → RED 전이 감지\n{_fmt(payload)}")
+
+
+def maybe_notify_red_streak(red_streak: int, n: int, payload: dict):
+    if n <= 0:
+        return
+    if payload.get("status") != "RED":
+        return
+    if red_streak == n:
+        _post_webhook(f"🚨 RED 연속 {n}회 도달\n{_fmt(payload)}")
+
+
+def send_daily_summary(payload: dict):
+    now = datetime.now(KST).strftime("%Y-%m-%d %H:%M")
+    _post_webhook(f"📌 일일 요약 리포트 ({now})\n{_fmt(payload)}")
