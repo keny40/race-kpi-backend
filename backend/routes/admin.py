@@ -1,33 +1,79 @@
-from fastapi import APIRouter, Query
-from backend.services.admin_state import set_state, get_state
-from backend.services.admin_log import fetch_admin_logs
+from fastapi import APIRouter, Request, HTTPException
+import sqlite3
+
+from backend.services.slack_notifier import send_red_pdf_bundle
+from backend.services.system_state import get_state, set_state
+from backend.services.strategy_state import force_pass, force_pass_off
+from backend.services.admin_log import log_admin_action
+
+DB_PATH = "races.db"
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
+def _auth(request: Request):
+    token = request.headers.get("x-admin-token")
+    if not token:
+        raise HTTPException(status_code=401, detail="unauthorized")
 
-@router.post("/state/{key}")
-def set_admin_state(key: str, enabled: bool):
-    set_state(key, enabled)
-    return {"key": key, "enabled": enabled}
+def _conn():
+    con = sqlite3.connect(DB_PATH)
+    con.row_factory = sqlite3.Row
+    return con
 
+# FORCE PASS ON
+@router.post("/force-pass/on")
+def force_pass_on(request: Request):
+    _auth(request)
+    force_pass(reason="MANUAL")
+    return {"status": "ok"}
 
-@router.get("/state/{key}")
-def get_admin_state(key: str):
-    return {"key": key, "enabled": get_state(key)}
+# FORCE PASS OFF
+@router.post("/force-pass/off")
+def force_pass_off_api(request: Request):
+    _auth(request)
+    force_pass_off()
+    return {"status": "ok"}
 
+# 최근 관리자 로그
+@router.get("/logs/recent")
+def recent_logs(request: Request, limit: int = 5):
+    _auth(request)
+    con = _conn()
+    cur = con.cursor()
+    rows = cur.execute(
+        """
+        SELECT action, reason, created_at
+        FROM admin_action_log
+        ORDER BY created_at DESC
+        LIMIT ?
+        """,
+        (limit,)
+    ).fetchall()
+    con.close()
 
-@router.get("/logs")
-def get_admin_logs(
-    limit: int = Query(50, ge=1, le=500),
-    action: str | None = None,
-    admin_id: str | None = None,
-    since: str | None = None
-):
-    return {
-        "items": fetch_admin_logs(
-            limit=limit,
-            action=action,
-            admin_id=admin_id,
-            since=since
-        )
-    }
+    return [
+        {"action": r["action"], "reason": r["reason"], "at": r["created_at"]}
+        for r in rows
+    ]
+
+# Slack PDF 재전송
+@router.post("/slack/pdf")
+def resend_pdf(request: Request):
+    _auth(request)
+    send_red_pdf_bundle()
+    log_admin_action("SLACK_PDF_RESEND", "MANUAL")
+    return {"status": "ok"}
+
+# 임계치 설정
+@router.post("/thresholds")
+async def update_thresholds(request: Request):
+    _auth(request)
+    data = await request.json()
+
+    if "red_notify_n" in data:
+        set_state("red_notify_n", str(int(data["red_notify_n"])))
+    if "green_release_n" in data:
+        set_state("green_release_n", str(int(data["green_release_n"])))
+
+    log_admin_action("THRESHOLD_UPDATE", str(data))
+    return {"status": "ok"}
