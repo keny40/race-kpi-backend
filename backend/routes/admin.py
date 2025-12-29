@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Request, HTTPException
 import sqlite3
 
-from backend.services.slack_notifier import send_red_pdf_bundle
 from backend.services.system_state import get_state, set_state
 from backend.services.strategy_state import force_pass, force_pass_off
 from backend.services.admin_log import log_admin_action
@@ -47,7 +46,7 @@ def recent_logs(request: Request, limit: int = 5):
         ORDER BY created_at DESC
         LIMIT ?
         """,
-        (limit,)
+        (limit,),
     ).fetchall()
     con.close()
 
@@ -55,14 +54,6 @@ def recent_logs(request: Request, limit: int = 5):
         {"action": r["action"], "reason": r["reason"], "at": r["created_at"]}
         for r in rows
     ]
-
-# Slack PDF 재전송
-@router.post("/slack/pdf")
-def resend_pdf(request: Request):
-    _auth(request)
-    send_red_pdf_bundle()
-    log_admin_action("SLACK_PDF_RESEND", "MANUAL")
-    return {"status": "ok"}
 
 # 임계치 설정
 @router.post("/thresholds")
