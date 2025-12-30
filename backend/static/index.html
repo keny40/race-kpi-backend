@@ -23,10 +23,6 @@
     .small{opacity:.8;font-size:12px}
     .in{width:260px;max-width:100%;padding:12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:#0b1020;color:#e9f0ff;font-weight:800}
     .logs{min-height:240px}
-    .pill{display:inline-block;padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.10);background:#121a33;font-weight:900}
-    .ok{color:#16c26a}
-    .warn{color:#f0b429}
-    .bad{color:#ff4d4f}
   </style>
 </head>
 <body>
@@ -44,7 +40,9 @@
           <input id="token" class="in" placeholder="x-admin-token (예: admin123)" />
           <button class="b-gray" id="btn-refresh">상태 새로고침</button>
         </div>
+
         <div style="height:12px"></div>
+
         <div class="btns">
           <button class="b-green" id="btn-fp-on">FORCE PASS ON</button>
           <button class="b-red" id="btn-fp-off">FORCE PASS OFF</button>
@@ -52,7 +50,9 @@
           <button class="b-gray" id="btn-pause-off">PAUSE OFF</button>
           <button class="b-gray" id="btn-logs">로그 DB 조회</button>
         </div>
+
         <div style="height:12px"></div>
+
         <div class="grid2">
           <div>
             <div class="small">상태(JSON)</div>
@@ -66,18 +66,9 @@
       </div>
 
       <div class="panel">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
-          <div style="font-weight:900">관리자 로그(DB)</div>
-          <div class="small">API: <span class="pill">GET /api/admin/logs?limit=50</span></div>
-        </div>
-        <div style="height:10px"></div>
+        <div class="small">관리자 로그(DB)</div>
         <div class="code logs" id="logBox"></div>
       </div>
-    </div>
-
-    <div style="height:14px"></div>
-    <div class="small" style="text-align:center;opacity:.7">
-      UI: /ui/index.html · API: /api/admin/status, /api/admin/run-mode/paused, /api/admin/run-mode/active, /api/admin/force-pass/on, /api/admin/force-pass/off, /api/admin/logs
     </div>
   </div>
 
@@ -85,6 +76,7 @@
 (() => {
   const $ = (id) => document.getElementById(id);
   const LS = "ADMIN_X_TOKEN";
+
   const tokenEl = $("token");
   const statusBox = $("statusBox");
   const msgBox = $("msgBox");
@@ -102,94 +94,70 @@
     return { "x-admin-token": t };
   }
 
-  function setMsg(text, cls) {
-    const c = cls ? cls : "";
-    msgBox.innerHTML = `<span class="${c}">${escapeHtml(text)}</span>`;
-  }
-
-  function escapeHtml(s){
-    return String(s).replace(/[&<>"']/g, (m)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[m]));
+  function setMsg(text) {
+    msgBox.textContent = text;
   }
 
   async function jfetch(url, opts={}) {
     const r = await fetch(url, { ...opts, headers: { ...(opts.headers||{}), ...headers() } });
-    const ct = r.headers.get("content-type") || "";
-    let data = null;
-    if (ct.includes("application/json")) data = await r.json();
-    else data = { raw: await r.text() };
+    const data = await r.json().catch(()=>({}));
     return { ok: r.ok, status: r.status, data };
   }
 
   function paintBadges(s) {
-    const run = s.run_mode ?? "-";
-    const fp = s.force_pass ?? "-";
-    const rs = s.red_score ?? "-";
-    badgeRun.textContent = `run_mode: ${run}`;
-    badgeFP.textContent = `force_pass: ${fp}`;
-    badgeRS.textContent = `red_score: ${rs}`;
+    badgeRun.textContent = `run_mode: ${s.run_mode ?? "-"}`;
+    badgeFP.textContent = `force_pass: ${s.force_pass ?? "-"}`;
+    badgeRS.textContent = `red_score: ${s.red_score ?? "-"}`;
   }
 
   async function refreshStatus() {
     const r = await jfetch("/api/admin/status");
     if (!r.ok) {
       statusBox.textContent = JSON.stringify(r.data, null, 2);
-      setMsg(`상태 조회 실패 (HTTP ${r.status})`, "bad");
+      setMsg("상태 조회 실패");
       return;
     }
     statusBox.textContent = JSON.stringify(r.data, null, 2);
     paintBadges(r.data);
-    setMsg("상태 조회 성공", "ok");
+    setMsg("상태 조회 성공");
   }
 
   async function forcePass(on) {
     const url = on ? "/api/admin/force-pass/on" : "/api/admin/force-pass/off";
     const r = await jfetch(url, { method:"POST" });
     statusBox.textContent = JSON.stringify(r.data, null, 2);
-    if (!r.ok) { setMsg(`FORCE PASS 실패 (HTTP ${r.status})`, "bad"); return; }
-    paintBadges(r.data);
-    setMsg(`FORCE PASS ${on ? "ON" : "OFF"} 성공`, "ok");
+    setMsg(`FORCE PASS ${on ? "ON" : "OFF"} 요청 완료`);
+    await refreshStatus();   // 🔑 핵심 수정
   }
 
   async function runMode(mode) {
-    const url = mode === "paused" ? "/api/admin/run-mode/paused" : "/api/admin/run-mode/active";
+    const url = mode === "paused"
+      ? "/api/admin/run-mode/paused"
+      : "/api/admin/run-mode/active";
     const r = await jfetch(url, { method:"POST" });
     statusBox.textContent = JSON.stringify(r.data, null, 2);
-    if (!r.ok) { setMsg(`RUN_MODE 전환 실패 (HTTP ${r.status})`, "bad"); return; }
-    paintBadges(r.data);
-    setMsg(`RUN_MODE ${mode.toUpperCase()} 전환 성공`, "ok");
+    setMsg(`RUN_MODE ${mode.toUpperCase()} 요청 완료`);
+    await refreshStatus();   // 🔑 핵심 수정
   }
 
   async function fetchLogs() {
     const r = await jfetch("/api/admin/logs?limit=50");
     if (!r.ok) {
       logBox.textContent = JSON.stringify(r.data, null, 2);
-      setMsg(`로그 조회 실패 (HTTP ${r.status})`, "bad");
       return;
     }
-    const items = (r.data && r.data.items) ? r.data.items : [];
-    if (!items.length) {
-      logBox.textContent = "로그가 없습니다";
-      setMsg("로그 조회 성공 (0건)", "ok");
-      return;
-    }
-    const lines = items.map(x => {
-      const t = x.created_at || "";
-      const e = x.event || "";
-      const d = x.detail || "";
-      return `${t} | ${e} | ${d}`;
-    });
-    logBox.textContent = lines.join("\n");
-    setMsg(`로그 조회 성공 (${items.length}건)`, "ok");
+    const items = r.data.items || [];
+    logBox.textContent = items.map(
+      x => `${x.created_at} | ${x.event} | ${x.detail}`
+    ).join("\n");
   }
 
-  $("btn-refresh").addEventListener("click", refreshStatus);
-  $("btn-fp-on").addEventListener("click", () => forcePass(true));
-  $("btn-fp-off").addEventListener("click", () => forcePass(false));
-  $("btn-pause-on").addEventListener("click", () => runMode("paused"));
-  $("btn-pause-off").addEventListener("click", () => runMode("active"));
-  $("btn-logs").addEventListener("click", fetchLogs);
-
-  tokenEl.addEventListener("keyup", (e) => { if (e.key === "Enter") refreshStatus(); });
+  $("btn-refresh").onclick = refreshStatus;
+  $("btn-fp-on").onclick = () => forcePass(true);
+  $("btn-fp-off").onclick = () => forcePass(false);
+  $("btn-pause-on").onclick = () => runMode("paused");
+  $("btn-pause-off").onclick = () => runMode("active");
+  $("btn-logs").onclick = fetchLogs;
 
   refreshStatus();
 })();
