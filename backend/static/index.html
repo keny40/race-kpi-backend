@@ -3,487 +3,196 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Admin Console</title>
+  <title>관리자 대시보드</title>
   <style>
-    :root{
-      --bg:#0b0f14; --panel:#111826; --panel2:#0f1623;
-      --text:#e7eefb; --muted:#9fb0c8;
-      --line:rgba(255,255,255,.08);
-      --ok:#20c997; --warn:#f59f00; --bad:#ff6b6b; --info:#4dabf7;
-      --chip:#182235;
-      --btn:#1b2a44; --btn2:#223a62;
-      --shadow:0 10px 40px rgba(0,0,0,.45);
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
-      background: radial-gradient(1200px 600px at 20% 0%, rgba(77,171,247,.10), transparent 60%),
-                  radial-gradient(900px 500px at 80% 10%, rgba(32,201,151,.08), transparent 55%),
-                  var(--bg);
-      color:var(--text);
-    }
-    .wrap{max-width:1100px; margin:26px auto; padding:0 16px}
-    .top{
-      display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin-bottom:14px
-    }
-    .title{
-      display:flex; flex-direction:column; gap:6px
-    }
-    h1{margin:0; font-size:18px; font-weight:800; letter-spacing:.2px}
-    .sub{color:var(--muted); font-size:12px}
-    .row{display:grid; grid-template-columns: 1.3fr .7fr; gap:14px}
-    .card{
-      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
-      border:1px solid var(--line);
-      border-radius:16px;
-      box-shadow: var(--shadow);
-      overflow:hidden;
-    }
-    .card .hd{
-      padding:14px 14px 10px 14px;
-      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,0));
-      border-bottom:1px solid var(--line);
-      display:flex; align-items:center; justify-content:space-between; gap:10px
-    }
-    .card .bd{padding:14px}
-    .kvs{display:grid; grid-template-columns: 1fr 1fr; gap:10px}
-    .kv{
-      background: rgba(0,0,0,.16);
-      border:1px solid var(--line);
-      border-radius:14px;
-      padding:12px 12px;
-    }
-    .kv .k{color:var(--muted); font-size:11px; letter-spacing:.3px}
-    .kv .v{margin-top:6px; font-size:14px; font-weight:800}
-    .chips{display:flex; flex-wrap:wrap; gap:8px; align-items:center}
-    .chip{
-      padding:7px 10px; border-radius:999px;
-      background: var(--chip);
-      border:1px solid var(--line);
-      font-size:12px; font-weight:800;
-      display:inline-flex; gap:8px; align-items:center
-    }
-    .dot{width:8px; height:8px; border-radius:999px; background:var(--info)}
-    .dot.ok{background:var(--ok)}
-    .dot.warn{background:var(--warn)}
-    .dot.bad{background:var(--bad)}
-    .btns{display:flex; flex-wrap:wrap; gap:10px}
-    button{
-      border:1px solid var(--line);
-      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
-      color:var(--text);
-      border-radius:14px;
-      padding:10px 12px;
-      font-weight:900;
-      cursor:pointer;
-      transition: transform .05s ease, filter .15s ease, opacity .15s ease;
-      min-width: 160px;
-      text-align:left;
-    }
-    button:hover{filter:brightness(1.08)}
-    button:active{transform: translateY(1px)}
-    button[disabled]{opacity:.45; cursor:not-allowed}
-    .btn-small{min-width:auto; padding:8px 10px; border-radius:12px; font-weight:900}
-    .grid2{display:grid; grid-template-columns: 1fr 1fr; gap:10px}
-    .note{
-      color:var(--muted); font-size:12px; line-height:1.5;
-      border-top:1px solid var(--line);
-      padding-top:12px; margin-top:12px
-    }
-    .log{
-      width:100%;
-      min-height:240px;
-      background: rgba(0,0,0,.18);
-      border:1px solid var(--line);
-      border-radius:14px;
-      padding:10px 10px;
-      color:#d9e6ff;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      font-size:12px;
-      line-height:1.55;
-      white-space:pre-wrap;
-      overflow:auto;
-    }
-    .statusline{
-      display:flex; gap:10px; align-items:center; color:var(--muted); font-size:12px
-    }
-    .err{
-      color: var(--bad);
-      font-weight:900;
-    }
-    .oktxt{color:var(--ok); font-weight:900}
-    .warntxt{color:var(--warn); font-weight:900}
-    .badtxt{color:var(--bad); font-weight:900}
-    .sep{height:1px; background:var(--line); margin:12px 0}
-    input{
-      width:100%;
-      padding:10px 12px;
-      border-radius:14px;
-      border:1px solid var(--line);
-      background: rgba(0,0,0,.18);
-      color: var(--text);
-      font-weight:800;
-      outline:none;
-    }
-    .hint{color:var(--muted); font-size:11px; margin-top:8px}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,"Noto Sans KR","Apple SD Gothic Neo",sans-serif;background:#0b1020;color:#e9f0ff}
+    .wrap{max-width:1100px;margin:22px auto;padding:0 14px}
+    .title{display:flex;align-items:center;justify-content:center;gap:14px;margin:6px 0 18px}
+    .title h1{margin:0;font-size:44px;letter-spacing:2px}
+    .badge{padding:10px 14px;border-radius:999px;background:#151b2e;border:1px solid rgba(255,255,255,.08);font-weight:800}
+    .row{display:grid;grid-template-columns:1fr;gap:14px}
+    .panel{background:#0f1730;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:14px}
+    .btns{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:center}
+    button{border:0;border-radius:12px;padding:14px 18px;font-weight:900;cursor:pointer}
+    .b-green{background:#16c26a;color:#06140b}
+    .b-red{background:#ff4d4f;color:#1a0505}
+    .b-blue{background:#2f79ff;color:#061027}
+    .b-gray{background:#1b2442;color:#e9f0ff}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .code{background:#0b1020;border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:12px;min-height:92px;white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:12px;line-height:1.55}
+    .small{opacity:.8;font-size:12px}
+    .in{width:260px;max-width:100%;padding:12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:#0b1020;color:#e9f0ff;font-weight:800}
+    .logs{min-height:240px}
+    .pill{display:inline-block;padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.10);background:#121a33;font-weight:900}
+    .ok{color:#16c26a}
+    .warn{color:#f0b429}
+    .bad{color:#ff4d4f}
   </style>
 </head>
 <body>
   <div class="wrap">
-    <div class="top">
-      <div class="title">
-        <h1>운영 관리자 콘솔</h1>
-        <div class="sub">PAUSE 가드 검증 + FORCE PASS 제어 + 상태 실시간 표시</div>
-      </div>
-      <div class="chips">
-        <span class="chip" id="chip-runmode"><span class="dot" id="dot-runmode"></span><span id="txt-runmode">RUN_MODE: -</span></span>
-        <span class="chip" id="chip-paused"><span class="dot" id="dot-paused"></span><span id="txt-paused">PAUSED: -</span></span>
-        <span class="chip" id="chip-forcepass"><span class="dot" id="dot-forcepass"></span><span id="txt-forcepass">FORCE_PASS: -</span></span>
-        <button class="btn-small" id="btn-refresh">새로고침</button>
-      </div>
+    <div class="title">
+      <h1>관리자 대시보드</h1>
+      <span class="badge" id="badge-runmode">run_mode: -</span>
+      <span class="badge" id="badge-forcepass">force_pass: -</span>
+      <span class="badge" id="badge-redscore">red_score: -</span>
     </div>
 
     <div class="row">
-      <div class="card">
-        <div class="hd">
-          <div style="font-weight:900">상태 및 제어</div>
-          <div class="statusline">
-            <span id="last-updated">마지막 갱신: -</span>
-            <span id="net-status" class="">연결: -</span>
-          </div>
+      <div class="panel">
+        <div class="btns">
+          <input id="token" class="in" placeholder="x-admin-token (예: admin123)" />
+          <button class="b-gray" id="btn-refresh">상태 새로고침</button>
         </div>
-        <div class="bd">
-          <div class="kvs">
-            <div class="kv">
-              <div class="k">run_mode</div>
-              <div class="v" id="v-runmode">-</div>
-            </div>
-            <div class="kv">
-              <div class="k">paused</div>
-              <div class="v" id="v-paused">-</div>
-            </div>
-            <div class="kv">
-              <div class="k">force_pass</div>
-              <div class="v" id="v-forcepass">-</div>
-            </div>
-            <div class="kv">
-              <div class="k">서버시간</div>
-              <div class="v" id="v-time">-</div>
-            </div>
+        <div style="height:12px"></div>
+        <div class="btns">
+          <button class="b-green" id="btn-fp-on">FORCE PASS ON</button>
+          <button class="b-red" id="btn-fp-off">FORCE PASS OFF</button>
+          <button class="b-blue" id="btn-pause-on">PAUSE ON</button>
+          <button class="b-gray" id="btn-pause-off">PAUSE OFF</button>
+          <button class="b-gray" id="btn-logs">로그 DB 조회</button>
+        </div>
+        <div style="height:12px"></div>
+        <div class="grid2">
+          <div>
+            <div class="small">상태(JSON)</div>
+            <div class="code" id="statusBox">{ }</div>
           </div>
-
-          <div class="sep"></div>
-
-          <div class="grid2">
-            <div>
-              <div style="font-weight:900; margin-bottom:10px">PAUSE 제어</div>
-              <div class="btns">
-                <button id="btn-pause-on">PAUSE ON<br><span style="color:var(--muted); font-weight:800; font-size:11px">POST /api/admin/run-mode/paused</span></button>
-                <button id="btn-pause-off">PAUSE OFF<br><span style="color:var(--muted); font-weight:800; font-size:11px">POST /api/admin/run-mode/active</span></button>
-              </div>
-              <div class="note">
-                예측 차단 확인은 브라우저에서 <span class="oktxt">GET /api/predict</span> 호출 시 <span class="badtxt">403</span> 와 함께 <span class="oktxt">PAUSED: predict blocked</span> 가 나오는지로 검증합니다
-              </div>
-            </div>
-
-            <div>
-              <div style="font-weight:900; margin-bottom:10px">FORCE PASS 제어</div>
-              <div class="btns">
-                <button id="btn-fp-on">FORCE PASS ON<br><span style="color:var(--muted); font-weight:800; font-size:11px">POST /api/admin/force-pass/on</span></button>
-                <button id="btn-fp-off">FORCE PASS OFF<br><span style="color:var(--muted); font-weight:800; font-size:11px">POST /api/admin/force-pass/off</span></button>
-              </div>
-              <div class="note">
-                FORCE PASS 는 운영 정책에 맞게만 사용하시고 실행 후 반드시 OFF 로 원복하시는 것을 권장합니다
-              </div>
-            </div>
+          <div>
+            <div class="small">메시지</div>
+            <div class="code" id="msgBox"></div>
           </div>
-
-          <div class="sep"></div>
-
-          <div style="font-weight:900; margin-bottom:10px">관리자 토큰</div>
-          <input id="admin-token" placeholder="x-admin-token 값을 입력하세요 예 admin123" />
-          <div class="hint">요청 헤더에 x-admin-token 으로 전송됩니다 값은 브라우저 localStorage 에 저장됩니다</div>
-
-          <div class="sep"></div>
-
-          <div style="font-weight:900; margin-bottom:10px">간단 테스트</div>
-          <div class="btns">
-            <button id="btn-test-status">상태 API 호출<br><span style="color:var(--muted); font-weight:800; font-size:11px">GET /api/admin/status</span></button>
-            <button id="btn-test-predict">예측 차단 확인<br><span style="color:var(--muted); font-weight:800; font-size:11px">GET /api/predict</span></button>
-          </div>
-
-          <div class="note" id="msg-area" style="margin-top:12px; border-top:0; padding-top:0"></div>
         </div>
       </div>
 
-      <div class="card">
-        <div class="hd">
-          <div style="font-weight:900">요청 로그</div>
-          <div class="chips">
-            <span class="chip"><span class="dot" id="dot-auto"></span><span id="txt-auto">AUTO REFRESH: ON</span></span>
-            <button class="btn-small" id="btn-toggle-auto">토글</button>
-            <button class="btn-small" id="btn-clear-log">비우기</button>
-          </div>
+      <div class="panel">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+          <div style="font-weight:900">관리자 로그(DB)</div>
+          <div class="small">API: <span class="pill">GET /api/admin/logs?limit=50</span></div>
         </div>
-        <div class="bd">
-          <div class="log" id="log"></div>
-          <div class="note">
-            자동 갱신은 2초 주기로 /api/admin/status 를 호출합니다 네트워크 오류 시 연결 배지가 빨간색으로 표시됩니다
-          </div>
-        </div>
+        <div style="height:10px"></div>
+        <div class="code logs" id="logBox"></div>
       </div>
+    </div>
+
+    <div style="height:14px"></div>
+    <div class="small" style="text-align:center;opacity:.7">
+      UI: /ui/index.html · API: /api/admin/status, /api/admin/run-mode/paused, /api/admin/run-mode/active, /api/admin/force-pass/on, /api/admin/force-pass/off, /api/admin/logs
     </div>
   </div>
 
 <script>
 (() => {
-  const $ = (id) => document.getElementById(id)
+  const $ = (id) => document.getElementById(id);
+  const LS = "ADMIN_X_TOKEN";
+  const tokenEl = $("token");
+  const statusBox = $("statusBox");
+  const msgBox = $("msgBox");
+  const logBox = $("logBox");
 
-  const logEl = $("log")
-  const msgArea = $("msg-area")
+  const badgeRun = $("badge-runmode");
+  const badgeFP = $("badge-forcepass");
+  const badgeRS = $("badge-redscore");
 
-  const stateEls = {
-    run_mode: $("v-runmode"),
-    paused: $("v-paused"),
-    force_pass: $("v-forcepass"),
-    time: $("v-time"),
+  tokenEl.value = localStorage.getItem(LS) || "";
 
-    chipRun: $("txt-runmode"),
-    chipPaused: $("txt-paused"),
-    chipFP: $("txt-forcepass"),
-
-    dotRun: $("dot-runmode"),
-    dotPaused: $("dot-paused"),
-    dotFP: $("dot-forcepass"),
+  function headers() {
+    const t = (tokenEl.value || "").trim();
+    if (t) localStorage.setItem(LS, t);
+    return { "x-admin-token": t };
   }
 
-  const netStatus = $("net-status")
-  const lastUpdated = $("last-updated")
-
-  const tokenInput = $("admin-token")
-
-  const btnRefresh = $("btn-refresh")
-  const btnPauseOn = $("btn-pause-on")
-  const btnPauseOff = $("btn-pause-off")
-  const btnFpOn = $("btn-fp-on")
-  const btnFpOff = $("btn-fp-off")
-
-  const btnTestStatus = $("btn-test-status")
-  const btnTestPredict = $("btn-test-predict")
-
-  const btnToggleAuto = $("btn-toggle-auto")
-  const btnClearLog = $("btn-clear-log")
-  const dotAuto = $("dot-auto")
-  const txtAuto = $("txt-auto")
-
-  const LS_KEY = "ADMIN_X_TOKEN"
-  const LS_AUTO = "ADMIN_AUTO_REFRESH"
-
-  function nowStr() {
-    const d = new Date()
-    const z = (n) => String(n).padStart(2,"0")
-    return `${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())} ${z(d.getHours())}:${z(d.getMinutes())}:${z(d.getSeconds())}`
-  }
-
-  function appendLog(line) {
-    const t = nowStr()
-    logEl.textContent += `[${t}] ${line}\n`
-    logEl.scrollTop = logEl.scrollHeight
-  }
-
-  function setMsg(html) {
-    msgArea.innerHTML = html || ""
-  }
-
-  function setNet(ok, text) {
-    netStatus.textContent = `연결: ${text}`
-    netStatus.className = ok ? "oktxt" : "err"
-  }
-
-  function setDot(el, cls) {
-    el.classList.remove("ok","warn","bad")
-    if (cls) el.classList.add(cls)
-  }
-
-  function authHeaders() {
-    const token = tokenInput.value.trim()
-    const h = { "Content-Type":"application/json" }
-    if (token) h["x-admin-token"] = token
-    return h
-  }
-
-  async function apiFetch(path, opts={}) {
-    const url = path.startsWith("http") ? path : path
-    const method = (opts.method || "GET").toUpperCase()
-    appendLog(`${method} ${url} 요청`)
-    try {
-      const res = await fetch(url, {
-        method,
-        headers: { ...authHeaders(), ...(opts.headers || {}) },
-        body: opts.body ? JSON.stringify(opts.body) : undefined
-      })
-
-      const ct = (res.headers.get("content-type") || "")
-      let data = null
-      if (ct.includes("application/json")) {
-        data = await res.json()
-      } else {
-        const txt = await res.text()
-        data = { raw: txt }
-      }
-
-      appendLog(`${method} ${url} 응답 ${res.status}`)
-      if (!res.ok) {
-        appendLog(`에러 바디 ${JSON.stringify(data)}`)
-      }
-      return { ok: res.ok, status: res.status, data }
-    } catch (e) {
-      appendLog(`네트워크 오류 ${String(e)}`)
-      return { ok:false, status:0, data:{ detail:String(e) } }
-    }
-  }
-
-  function renderStatus(s) {
-    const runMode = (s && (s.run_mode ?? s.runMode)) ?? "-"
-    const paused = (s && (s.paused ?? s.is_paused)) ?? "-"
-    const fp = (s && (s.force_pass ?? s.forcePass)) ?? "-"
-
-    stateEls.run_mode.textContent = String(runMode)
-    stateEls.paused.textContent = String(paused)
-    stateEls.force_pass.textContent = String(fp)
-    stateEls.time.textContent = nowStr()
-
-    stateEls.chipRun.textContent = `RUN_MODE: ${runMode}`
-    stateEls.chipPaused.textContent = `PAUSED: ${paused}`
-    stateEls.chipFP.textContent = `FORCE_PASS: ${fp}`
-
-    // run_mode dot
-    if (String(runMode).toUpperCase() === "PAUSED") {
-      setDot(stateEls.dotRun, "bad")
-    } else if (String(runMode).toUpperCase() === "ACTIVE") {
-      setDot(stateEls.dotRun, "ok")
-    } else {
-      setDot(stateEls.dotRun, "warn")
-    }
-
-    // paused dot
-    if (paused === true || String(paused).toLowerCase() === "true") setDot(stateEls.dotPaused, "bad")
-    else if (paused === false || String(paused).toLowerCase() === "false") setDot(stateEls.dotPaused, "ok")
-    else setDot(stateEls.dotPaused, "warn")
-
-    // force_pass dot
-    if (fp === true || String(fp).toLowerCase() === "true") setDot(stateEls.dotFP, "warn")
-    else if (fp === false || String(fp).toLowerCase() === "false") setDot(stateEls.dotFP, "ok")
-    else setDot(stateEls.dotFP, "warn")
-
-    // 버튼 상태
-    const isPaused = (paused === true || String(runMode).toUpperCase() === "PAUSED")
-    btnPauseOn.disabled = isPaused
-    btnPauseOff.disabled = !isPaused
-  }
-
-  async function refreshStatus(showMsg=false) {
-    const r = await apiFetch("/api/admin/status", { method:"GET" })
-    if (r.ok) {
-      setNet(true, "OK")
-      lastUpdated.textContent = `마지막 갱신: ${nowStr()}`
-      renderStatus(r.data || {})
-      if (showMsg) setMsg(`<span class="oktxt">상태 갱신 성공</span>`)
-    } else {
-      setNet(false, r.status ? `HTTP ${r.status}` : "DISCONNECTED")
-      lastUpdated.textContent = `마지막 갱신: ${nowStr()}`
-      if (showMsg) setMsg(`<span class="err">상태 갱신 실패</span> <span style="color:var(--muted)">${escapeHtml(JSON.stringify(r.data))}</span>`)
-    }
-    return r
+  function setMsg(text, cls) {
+    const c = cls ? cls : "";
+    msgBox.innerHTML = `<span class="${c}">${escapeHtml(text)}</span>`;
   }
 
   function escapeHtml(s){
-    return String(s).replace(/[&<>"']/g, (m)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[m]))
+    return String(s).replace(/[&<>"']/g, (m)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[m]));
   }
 
-  async function postRunMode(mode) {
-    const r = await apiFetch(`/api/admin/run-mode/${mode}`, { method:"POST" })
-    if (r.ok) {
-      setMsg(`<span class="oktxt">${mode.toUpperCase()} 전환 성공</span>`)
-      await refreshStatus(false)
-    } else {
-      setMsg(`<span class="err">${mode.toUpperCase()} 전환 실패</span> <span style="color:var(--muted)">${escapeHtml(JSON.stringify(r.data))}</span>`)
+  async function jfetch(url, opts={}) {
+    const r = await fetch(url, { ...opts, headers: { ...(opts.headers||{}), ...headers() } });
+    const ct = r.headers.get("content-type") || "";
+    let data = null;
+    if (ct.includes("application/json")) data = await r.json();
+    else data = { raw: await r.text() };
+    return { ok: r.ok, status: r.status, data };
+  }
+
+  function paintBadges(s) {
+    const run = s.run_mode ?? "-";
+    const fp = s.force_pass ?? "-";
+    const rs = s.red_score ?? "-";
+    badgeRun.textContent = `run_mode: ${run}`;
+    badgeFP.textContent = `force_pass: ${fp}`;
+    badgeRS.textContent = `red_score: ${rs}`;
+  }
+
+  async function refreshStatus() {
+    const r = await jfetch("/api/admin/status");
+    if (!r.ok) {
+      statusBox.textContent = JSON.stringify(r.data, null, 2);
+      setMsg(`상태 조회 실패 (HTTP ${r.status})`, "bad");
+      return;
     }
+    statusBox.textContent = JSON.stringify(r.data, null, 2);
+    paintBadges(r.data);
+    setMsg("상태 조회 성공", "ok");
   }
 
-  async function postForcePass(on) {
-    const path = on ? "/api/admin/force-pass/on" : "/api/admin/force-pass/off"
-    const r = await apiFetch(path, { method:"POST" })
-    if (r.ok) {
-      setMsg(`<span class="oktxt">FORCE PASS ${on ? "ON" : "OFF"} 성공</span>`)
-      await refreshStatus(false)
-    } else {
-      setMsg(`<span class="err">FORCE PASS ${on ? "ON" : "OFF"} 실패</span> <span style="color:var(--muted)">${escapeHtml(JSON.stringify(r.data))}</span>`)
+  async function forcePass(on) {
+    const url = on ? "/api/admin/force-pass/on" : "/api/admin/force-pass/off";
+    const r = await jfetch(url, { method:"POST" });
+    statusBox.textContent = JSON.stringify(r.data, null, 2);
+    if (!r.ok) { setMsg(`FORCE PASS 실패 (HTTP ${r.status})`, "bad"); return; }
+    paintBadges(r.data);
+    setMsg(`FORCE PASS ${on ? "ON" : "OFF"} 성공`, "ok");
+  }
+
+  async function runMode(mode) {
+    const url = mode === "paused" ? "/api/admin/run-mode/paused" : "/api/admin/run-mode/active";
+    const r = await jfetch(url, { method:"POST" });
+    statusBox.textContent = JSON.stringify(r.data, null, 2);
+    if (!r.ok) { setMsg(`RUN_MODE 전환 실패 (HTTP ${r.status})`, "bad"); return; }
+    paintBadges(r.data);
+    setMsg(`RUN_MODE ${mode.toUpperCase()} 전환 성공`, "ok");
+  }
+
+  async function fetchLogs() {
+    const r = await jfetch("/api/admin/logs?limit=50");
+    if (!r.ok) {
+      logBox.textContent = JSON.stringify(r.data, null, 2);
+      setMsg(`로그 조회 실패 (HTTP ${r.status})`, "bad");
+      return;
     }
-  }
-
-  async function testPredictBlocked() {
-    const r = await apiFetch("/api/predict", { method:"GET" })
-    if (r.status === 403 && r.data && String(r.data.detail || "").includes("PAUSED")) {
-      setMsg(`<span class="oktxt">예측 차단 정상</span> <span style="color:var(--muted)">HTTP 403 ${escapeHtml(JSON.stringify(r.data))}</span>`)
-    } else if (r.ok) {
-      setMsg(`<span class="warntxt">예측이 허용된 상태입니다</span> <span style="color:var(--muted)">HTTP ${r.status} ${escapeHtml(JSON.stringify(r.data))}</span>`)
-    } else {
-      setMsg(`<span class="err">예측 확인 실패</span> <span style="color:var(--muted)">HTTP ${r.status} ${escapeHtml(JSON.stringify(r.data))}</span>`)
+    const items = (r.data && r.data.items) ? r.data.items : [];
+    if (!items.length) {
+      logBox.textContent = "로그가 없습니다";
+      setMsg("로그 조회 성공 (0건)", "ok");
+      return;
     }
+    const lines = items.map(x => {
+      const t = x.created_at || "";
+      const e = x.event || "";
+      const d = x.detail || "";
+      return `${t} | ${e} | ${d}`;
+    });
+    logBox.textContent = lines.join("\n");
+    setMsg(`로그 조회 성공 (${items.length}건)`, "ok");
   }
 
-  function saveToken() {
-    const v = tokenInput.value.trim()
-    if (v) localStorage.setItem(LS_KEY, v)
-    else localStorage.removeItem(LS_KEY)
-  }
+  $("btn-refresh").addEventListener("click", refreshStatus);
+  $("btn-fp-on").addEventListener("click", () => forcePass(true));
+  $("btn-fp-off").addEventListener("click", () => forcePass(false));
+  $("btn-pause-on").addEventListener("click", () => runMode("paused"));
+  $("btn-pause-off").addEventListener("click", () => runMode("active"));
+  $("btn-logs").addEventListener("click", fetchLogs);
 
-  function loadToken() {
-    const v = localStorage.getItem(LS_KEY) || ""
-    tokenInput.value = v
-  }
+  tokenEl.addEventListener("keyup", (e) => { if (e.key === "Enter") refreshStatus(); });
 
-  // auto refresh
-  let timer = null
-  function setAuto(on) {
-    localStorage.setItem(LS_AUTO, on ? "1" : "0")
-    if (timer) { clearInterval(timer); timer = null }
-    if (on) {
-      timer = setInterval(() => refreshStatus(false), 2000)
-      setDot(dotAuto, "ok")
-      txtAuto.textContent = "AUTO REFRESH: ON"
-    } else {
-      setDot(dotAuto, "warn")
-      txtAuto.textContent = "AUTO REFRESH: OFF"
-    }
-  }
-  function getAuto() {
-    return (localStorage.getItem(LS_AUTO) || "1") === "1"
-  }
-
-  // events
-  btnRefresh.addEventListener("click", () => refreshStatus(true))
-  btnPauseOn.addEventListener("click", () => postRunMode("paused"))
-  btnPauseOff.addEventListener("click", () => postRunMode("active"))
-  btnFpOn.addEventListener("click", () => postForcePass(true))
-  btnFpOff.addEventListener("click", () => postForcePass(false))
-  btnTestStatus.addEventListener("click", () => refreshStatus(true))
-  btnTestPredict.addEventListener("click", () => testPredictBlocked())
-
-  btnToggleAuto.addEventListener("click", () => setAuto(!getAuto()))
-  btnClearLog.addEventListener("click", () => { logEl.textContent = "" ; setMsg("") })
-
-  tokenInput.addEventListener("change", () => { saveToken(); refreshStatus(true) })
-  tokenInput.addEventListener("keyup", (e) => {
-    if (e.key === "Enter") { saveToken(); refreshStatus(true) }
-  })
-
-  // init
-  loadToken()
-  setAuto(getAuto())
-  refreshStatus(true)
-})()
+  refreshStatus();
+})();
 </script>
 </body>
 </html>
