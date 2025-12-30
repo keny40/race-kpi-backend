@@ -31,7 +31,7 @@ def send_admin_action(action: str, detail: str = ""):
 
 def send_red_alert(reason: str, score: float | None = None):
     """
-    RED 상태 경고 알림
+    단일 RED 발생 알림
     """
     msg = f"[RED ALERT]\n• reason: {reason}"
     if score is not None:
@@ -45,7 +45,7 @@ def notify_status_change(
     reason: str | None = None,
 ):
     """
-    시스템 상태 변경 알림 (NORMAL → PAUSED → FORCE_PASS 등)
+    시스템 상태 변경 알림
     """
     msg = (
         "[STATUS CHANGE]\n"
@@ -54,4 +54,22 @@ def notify_status_change(
     )
     if reason:
         msg += f"\n• reason: {reason}"
+    _post(msg)
+
+
+def notify_red_streak(
+    count: int,
+    threshold: int,
+    action: str | None = None,
+):
+    """
+    RED 연속 발생 알림 (자동 PAUSE / FORCE PASS 트리거용)
+    """
+    msg = (
+        "[RED STREAK]\n"
+        f"• count: {count}\n"
+        f"• threshold: {threshold}"
+    )
+    if action:
+        msg += f"\n• action: {action}"
     _post(msg)
