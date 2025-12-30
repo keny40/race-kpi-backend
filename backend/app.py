@@ -24,6 +24,7 @@ from backend.routes.kpi_match import router as kpi_match_router
 from backend.routes.kpi_alert import router as kpi_alert_router
 from backend.routes.kpi_status import router as kpi_status_router
 from backend.routes.admin_control import router as admin_control_router
+from backend.routes.admin_logs import router as admin_logs_router
 
 @app.get("/")
 def root():
@@ -42,6 +43,7 @@ app.include_router(kpi_match_router)
 app.include_router(kpi_alert_router)
 app.include_router(kpi_status_router)
 app.include_router(admin_control_router)
+app.include_router(admin_logs_router)
 
 # === UI (STATIC) ===
 # /ui/index.html, /ui/admin_logs.html 을 제공

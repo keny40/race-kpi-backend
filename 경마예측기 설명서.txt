@@ -1,13 +1,16 @@
 2742a1157e8e11c9bb3a2dbb02a012a7b8a12e69a5be0282712d62e610fd4a29
 
 http://localhost:8080/predict_test.html
-
+C:\Users\keny4\Desktop\Horse Race\backend\routes\user_predict.html
 
 http://127.0.0.1:8000/_debug
 http://127.0.0.1:8000/api/kpi/match
 http://127.0.0.1:8000/ui/results
 http://127.0.0.1:8000/docs
 
+git add backend/routes/kpi_status.py backend/app.py
+git commit -m "feat: add KPI RED/YELLOW/GREEN status logic"
+git push
 
 
 예측 → 로그 저장 → 피드백 반영 → 대시보드 표시

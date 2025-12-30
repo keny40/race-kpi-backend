@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<title>관리자 대시보드</title>
+<style>
+body { background:#0f172a; color:#e5e7eb; font-family:Arial; padding:20px }
+section { background:#111827; border:1px solid #1f2937; border-radius:8px; padding:16px; margin-bottom:16px }
+h2,h3 { margin:0 0 8px }
+button { padding:6px 12px; border:none; border-radius:6px; cursor:pointer }
+.red { color:#f87171 } .green { color:#34d399 } .yellow { color:#facc15 }
+input { padding:4px; margin-right:6px }
+li { font-size:13px; margin-bottom:4px }
+.small { font-size:12px; color:#9ca3af }
+</style>
+</head>
+
+<body>
+
+<h2>관리자 운영 대시보드</h2>
+
+<section>
+  <h3>관리자 인증</h3>
+  <input type="password" id="token" placeholder="관리자 비밀번호">
+  <button onclick="saveToken()">저장</button>
+  <div class="small">브라우저에 저장됩니다</div>
+</section>
+
+<section>
+  <h3>운영 상태</h3>
+  <div id="kpiStatus">KPI 상태: -</div>
+  <div id="kpiReason">RED 사유: -</div>
+  <div id="forcePass">FORCE PASS: -</div>
+</section>
+
+<section>
+  <h3>FORCE PASS 제어</h3>
+  <button onclick="fpOn()">FORCE PASS ON</button>
+  <button onclick="fpOff()">FORCE PASS OFF</button>
+</section>
+
+<section>
+  <h3>Slack 리포트</h3>
+  <button onclick="sendPdf()">RED KPI PDF 재전송</button>
+</section>
+
+<section>
+  <h3>임계치 설정</h3>
+  RED 연속 N <input id="redN" type="number" value="3">
+  GREEN 복귀 N <input id="greenN" type="number" value="3">
+  <button onclick="saveThresholds()">저장</button>
+</section>
+
+<section>
+  <h3>최근 관리자 로그</h3>
+  <ul id="logs"></ul>
+</section>
+
+<script>
+const headers = () => ({ "x-admin-token": localStorage.getItem("admin_token") || "" })
+
+function saveToken(){
+  localStorage.setItem("admin_token", document.getElementById("token").value)
+  refresh()
+}
+
+async function loadStatus(){
+  const r = await fetch("/api/status/overview",{ headers:headers() })
+  if(!r.ok) return
+  const d = await r.json()
+
+  const el = document.getElementById("kpiStatus")
+  el.innerText = "KPI 상태: " + d.kpi_status
+  el.className = d.kpi_status === "RED" ? "red" : d.kpi_status === "GREEN" ? "green" : "yellow"
+
+  document.getElementById("kpiReason").innerText = "RED 사유: " + (d.kpi_reason || "-")
+  document.getElementById("forcePass").innerText = "FORCE PASS: " + (d.force_pass ? "ON" : "OFF")
+}
+
+async function loadLogs(){
+  const r = await fetch("/api/admin/logs/recent",{ headers:headers() })
+  if(!r.ok) return
+  const list = await r.json()
+  const ul = document.getElementById("logs")
+  ul.innerHTML = ""
+  list.forEach(l=>{
+    const li=document.createElement("li")
+    li.innerText=`${l.at} | ${l.action} | ${l.reason}`
+    ul.appendChild(li)
+  })
+}
+
+async function fpOn(){ await fetch("/api/admin/force-pass/on",{method:"POST",headers:headers()}); refresh() }
+async function fpOff(){ await fetch("/api/admin/force-pass/off",{method:"POST",headers:headers()}); refresh() }
+async function sendPdf(){ await fetch("/api/admin/slack/pdf",{method:"POST",headers:headers()}); alert("전송 완료") }
+
+async function saveThresholds(){
+  await fetch("/api/admin/thresholds",{
+    method:"POST",
+    headers:{...headers(),"Content-Type":"application/json"},
+    body:JSON.stringify({
+      red_notify_n:document.getElementById("redN").value,
+      green_release_n:document.getElementById("greenN").value
+    })
+  })
+  alert("저장 완료")
+}
+
+function refresh(){ loadStatus(); loadLogs() }
+refresh()
+setInterval(refresh,5000)
+</script>
+
+</body>
+</html>
