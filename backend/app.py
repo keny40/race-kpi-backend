@@ -68,21 +68,14 @@ app.include_router(admin_auth_router)
 app.include_router(admin_control_router)
 
 # ===============================
-# STATIC FILES (정답)
+# STATIC FILES (정답: 단 하나만)
+# backend/static 전체를 /admin 으로 노출
 # ===============================
 app.mount(
     "/admin",
     StaticFiles(
-        directory=os.path.join(BASE_DIR, "static", "admin"),
+        directory=os.path.join(BASE_DIR, "static"),
         html=True
     ),
-    name="admin",
-)
-
-app.mount(
-    "/static",
-    StaticFiles(
-        directory=os.path.join(BASE_DIR, "static")
-    ),
-    name="static",
+    name="admin-static",
 )
