@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>경마 예측</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial;
+      background: #0f172a;
+      color: #e5e7eb;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 520px;
+      margin: 0 auto;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .card {
+      background: #020617;
+      border: 1px solid #1e293b;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .label {
+      font-size: 13px;
+      color: #94a3b8;
+      margin-bottom: 6px;
+    }
+    .value {
+      font-size: 20px;
+      font-weight: bold;
+    }
+    .decision {
+      font-size: 32px;
+      text-align: center;
+      margin: 20px 0;
+    }
+    .pass {
+      color: #f87171;
+    }
+    .pick {
+      color: #4ade80;
+    }
+    .bar {
+      background: #1e293b;
+      border-radius: 8px;
+      overflow: hidden;
+      height: 14px;
+      margin-top: 6px;
+    }
+    .bar-inner {
+      height: 100%;
+      background: linear-gradient(90deg, #22d3ee, #3b82f6);
+      width: 0%;
+    }
+    .footer {
+      text-align: center;
+      font-size: 12px;
+      color: #64748b;
+      margin-top: 20px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      border: none;
+      background: #2563eb;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 12px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>다음 경주 예측</h1>
+
+  <div class="card">
+    <div class="label">경주 ID</div>
+    <div class="value" id="race-id">대기 중</div>
+  </div>
+
+  <div class="card">
+    <div class="label">예측 결과</div>
+    <div class="decision" id="decision">—</div>
+
+    <div class="label">신뢰도</div>
+    <div class="bar">
+      <div class="bar-inner" id="conf-bar"></div>
+    </div>
+    <div class="value" id="confidence">0%</div>
+  </div>
+
+  <button onclick="loadPredict()">예측 불러오기</button>
+
+  <div class="footer">
+    데이터 준비 중일 수 있습니다<br/>
+    (관리자 FORCE PASS 시 PASS 표시)
+  </div>
+</div>
+
+<script>
+async function loadPredict() {
+  // 임시 race_id / horses (실데이터 연결 시 교체)
+  const payload = {
+    race_id: "NEXT_RACE",
+    horses: [1,2,3,4,5,6,7,8]
+  };
+
+  try {
+    const res = await fetch("/api/predict", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+
+    document.getElementById("race-id").innerText = payload.race_id;
+
+    const decisionEl = document.getElementById("decision");
+    if (data.decision === "PASS") {
+      decisionEl.innerText = "PASS";
+      decisionEl.className = "decision pass";
+    } else {
+      decisionEl.innerText = data.decision + "번";
+      decisionEl.className = "decision pick";
+    }
+
+    const conf = Math.round((data.confidence || 0) * 100);
+    document.getElementById("confidence").innerText = conf + "%";
+    document.getElementById("conf-bar").style.width = conf + "%";
+
+  } catch (e) {
+    alert("예측을 불러오지 못했습니다");
+  }
+}
+</script>
+
+</body>
+</html>

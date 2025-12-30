@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin Action Logs</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: #e5e7eb;
+      padding: 20px;
+    }
+    h1 {
+      margin-bottom: 16px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #020617;
+    }
+    th, td {
+      border: 1px solid #1e293b;
+      padding: 8px 10px;
+      text-align: left;
+      font-size: 14px;
+    }
+    th {
+      background: #020617;
+      color: #38bdf8;
+    }
+    tr:nth-child(even) {
+      background: #020617;
+    }
+    .tag {
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    .FORCE { background: #7c2d12; }
+    .SYSTEM { background: #1e3a8a; }
+  </style>
+</head>
+<body>
+
+<h1>🛠 관리자 액션 로그</h1>
+
+<table>
+  <thead>
+    <tr>
+      <th>시간</th>
+      <th>액션</th>
+      <th>상세</th>
+      <th>주체</th>
+    </tr>
+  </thead>
+  <tbody id="logBody"></tbody>
+</table>
+
+<script>
+async function loadLogs() {
+  const res = await fetch("/api/admin/logs?limit=200");
+  const data = await res.json();
+  const tbody = document.getElementById("logBody");
+  tbody.innerHTML = "";
+
+  data.logs.forEach(row => {
+    const tr = document.createElement("tr");
+
+    const tagClass =
+      row.action.startsWith("FORCE") ? "FORCE" :
+      row.action.startsWith("SYSTEM") ? "SYSTEM" : "";
+
+    tr.innerHTML = `
+      <td>${row.created_at}</td>
+      <td><span class="tag ${tagClass}">${row.action}</span></td>
+      <td>${row.detail ?? ""}</td>
+      <td>${row.actor}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+loadLogs();
+setInterval(loadLogs, 5000);
+</script>
+
+</body>
+</html>

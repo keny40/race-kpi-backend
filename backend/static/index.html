@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>관리자 대시보드</title>
+  <style>
+    body {
+      background: #0b1220;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      padding: 40px;
+    }
+    button {
+      padding: 12px 20px;
+      margin-right: 10px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    pre {
+      background: #111827;
+      padding: 20px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>관리자 대시보드</h1>
+
+<script>
+  const ADMIN_TOKEN = prompt("관리자 비밀번호를 입력하세요")
+  if (!ADMIN_TOKEN) {
+    alert("접근 불가")
+    location.href = "/"
+  }
+</script>
+
+<button onclick="forcePass(true)">FORCE PASS ON</button>
+<button onclick="forcePass(false)">FORCE PASS OFF</button>
+<button onclick="loadLogs()">로그 새로고침</button>
+
+<pre id="output">대기 중...</pre>
+
+<script>
+const headers = {
+  "Content-Type": "application/json",
+  "X-ADMIN-TOKEN": ADMIN_TOKEN
+}
+
+function forcePass(enabled) {
+  fetch("/api/admin/force_pass", {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ enabled })
+  })
+  .then(r => r.json())
+  .then(d => {
+    document.getElementById("output").textContent =
+      "FORCE PASS = " + enabled
+  })
+  .catch(() => alert("인증 실패"))
+}
+
+function loadLogs() {
+  fetch("/api/admin/logs", { headers })
+    .then(r => r.json())
+    .then(d => {
+      document.getElementById("output").textContent =
+        JSON.stringify(d, null, 2)
+    })
+    .catch(() => alert("인증 실패"))
+}
+</script>
+
+</body>
+</html>
