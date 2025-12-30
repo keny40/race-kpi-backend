@@ -7,17 +7,26 @@
     body {
       margin: 0;
       font-family: Arial, sans-serif;
-      background: linear-gradient(180deg, #0b1220, #0f172a);
+      background: linear-gradient(180deg, #020617, #0f172a);
       color: #e5e7eb;
     }
-    h1 {
-      padding: 24px;
-      margin: 0;
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 24px;
     }
-    .container {
-      padding: 24px;
+    .badge {
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: bold;
     }
+    .ok { background: #22c55e; color: #022c22; }
+    .no { background: #ef4444; color: #450a0a; }
+
     .buttons {
+      padding: 0 24px;
       display: flex;
       gap: 12px;
       margin-bottom: 20px;
@@ -29,41 +38,57 @@
       cursor: pointer;
       font-size: 14px;
     }
+    button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
     .on { background: #22c55e; color: #022c22; }
     .off { background: #ef4444; color: #450a0a; }
-    .refresh { background: #3b82f6; color: #0b1220; }
+    .refresh { background: #3b82f6; color: #020617; }
+
     pre {
+      margin: 0 24px 24px;
       background: #020617;
       border: 1px solid #1e293b;
       padding: 16px;
       border-radius: 6px;
-      max-height: 400px;
+      max-height: 360px;
       overflow: auto;
     }
   </style>
 </head>
 <body>
+
+<header>
   <h1>관리자 대시보드</h1>
+  <span id="authBadge" class="badge no">미인증</span>
+</header>
 
-  <div class="container">
-    <div class="buttons">
-      <button class="on" onclick="forcePassOn()">FORCE PASS ON</button>
-      <button class="off" onclick="forcePassOff()">FORCE PASS OFF</button>
-      <button class="refresh" onclick="refreshLogs()">로그 새로고침</button>
-    </div>
+<div class="buttons">
+  <button id="btnOn" class="on" onclick="forcePassOn()">FORCE PASS ON</button>
+  <button id="btnOff" class="off" onclick="forcePassOff()">FORCE PASS OFF</button>
+  <button class="refresh" onclick="refreshLogs()">로그 새로고침</button>
+</div>
 
-    <pre id="logBox">로그를 불러오는 중...</pre>
-  </div>
+<pre id="logBox">대기 중...</pre>
 
 <script>
+function updateAuthUI() {
+  const ok = localStorage.getItem("isAdmin") === "1";
+  document.getElementById("authBadge").className = "badge " + (ok ? "ok" : "no");
+  document.getElementById("authBadge").innerText = ok ? "인증됨" : "미인증";
+  document.getElementById("btnOn").disabled = !ok;
+  document.getElementById("btnOff").disabled = !ok;
+}
+
 async function forcePassOn() {
   await fetch("/api/admin/force-pass/on", { method: "POST" });
-  await refreshLogs();
+  refreshLogs();
 }
 
 async function forcePassOff() {
   await fetch("/api/admin/force-pass/off", { method: "POST" });
-  await refreshLogs();
+  refreshLogs();
 }
 
 async function refreshLogs() {
@@ -73,7 +98,16 @@ async function refreshLogs() {
     JSON.stringify(data, null, 2);
 }
 
+updateAuthUI();
 refreshLogs();
 </script>
+
+setInterval(() => {
+  if (localStorage.getItem("isAdmin") === "1") {
+    refreshLogs();
+  }
+}, 5000);
+
+
 </body>
 </html>
