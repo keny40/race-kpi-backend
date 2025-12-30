@@ -1,46 +1,40 @@
-# backend/services/admin_log.py
-
+import sqlite3
 from datetime import datetime
-from backend.services.slack_notifier import _post_webhook  # 내부 사용
 
-# === 관리자 액션 로그 (메모리 기반) ===
-_ADMIN_LOGS: list[dict] = []
+DB_PATH = "races.db"
 
 
-def log_action(
-    action: str,
-    detail: str | None = None,
-    actor: str = "admin",
-):
-    entry = {
-        "action": action,
-        "detail": detail,
-        "actor": actor,
-        "timestamp": datetime.utcnow().isoformat(),
-    }
-
-    _ADMIN_LOGS.append(entry)
-
-    # Slack 알림 (실패해도 무시)
-    try:
-        _post_webhook(
-            f"🛠 ADMIN ACTION\n"
-            f"action={action}\n"
-            f"detail={detail}\n"
-            f"actor={actor}"
-        )
-    except Exception:
-        pass
+def _conn():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
 
 
-# === 🔹 legacy / admin 라우터 호환 alias ===
-def log_admin_action(
-    action: str,
-    detail: str | None = None,
-    actor: str = "admin",
-):
-    log_action(action=action, detail=detail, actor=actor)
+def log_admin_action(action: str, detail: str = ""):
+    conn = _conn()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        INSERT INTO admin_logs (created_at, action, detail)
+        VALUES (?, ?, ?)
+        """,
+        (datetime.utcnow().isoformat(), action, detail),
+    )
+    conn.commit()
+    conn.close()
 
 
-def get_admin_logs(limit: int = 100) -> list[dict]:
-    return _ADMIN_LOGS[-limit:]
+def get_logs(limit: int = 100):
+    conn = _conn()
+    cur = conn.cursor()
+    rows = cur.execute(
+        """
+        SELECT created_at, action, detail
+        FROM admin_logs
+        ORDER BY id DESC
+        LIMIT ?
+        """,
+        (limit,),
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]

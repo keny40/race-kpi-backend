@@ -5,10 +5,9 @@ from backend.services.strategy_state import (
     disable_force_pass,
     is_force_pass_enabled,
 )
-from backend.services.admin_log import get_logs
+from backend.services.admin_log import log_admin_action, get_logs
 from backend.services.slack_notifier import send_admin_action
 from backend.services.pdf_generator import generate_admin_log_pdf
-import csv
 
 router = APIRouter(prefix="/api/admin", tags=["admin-control"])
 
@@ -16,6 +15,7 @@ router = APIRouter(prefix="/api/admin", tags=["admin-control"])
 @router.post("/force-pass/on")
 def force_pass_on():
     enable_force_pass(reason="MANUAL")
+    log_admin_action("FORCE_PASS_ON", "manual")
     send_admin_action("FORCE_PASS_ON", "manual")
     return {"status": "ok"}
 
@@ -23,6 +23,7 @@ def force_pass_on():
 @router.post("/force-pass/off")
 def force_pass_off():
     disable_force_pass()
+    log_admin_action("FORCE_PASS_OFF", "manual")
     send_admin_action("FORCE_PASS_OFF", "manual")
     return {"status": "ok"}
 
