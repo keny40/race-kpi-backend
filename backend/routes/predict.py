@@ -7,6 +7,7 @@ from backend.services.operation_guard import (
 
 router = APIRouter(prefix="/api", tags=["predict"])
 
+
 @router.get("/predict")
 @router.post("/predict")
 def predict():
@@ -28,16 +29,18 @@ def predict():
             "timestamp": datetime.utcnow().isoformat()
         }
 
-    # 3️⃣ 예측 예시 (테스트용)
+    # 3️⃣ 테스트용 예측 (나중에 실제 로직으로 교체)
     decision = "RED"
     confidence = 0.63
 
     red_info = record_prediction(decision, confidence)
 
+    # 4️⃣ 정상 반환
     return {
         "decision": decision,
         "confidence": confidence,
         "red_score": red_info["red_score"],
         "auto_paused": red_info["auto_paused"],
         "run_mode": get_status()["run_mode"],
-        "timestamp": datetime.ut
+        "timestamp": datetime.utcnow().isoformat()
+    }
