@@ -2,88 +2,78 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>Admin Action Logs</title>
+  <title>관리자 액션 로그</title>
   <style>
     body {
+      margin: 0;
       font-family: Arial, sans-serif;
-      background: #0f172a;
+      background: linear-gradient(180deg, #020617, #0f172a);
       color: #e5e7eb;
-      padding: 20px;
     }
     h1 {
-      margin-bottom: 16px;
+      padding: 24px;
+      margin: 0;
     }
     table {
       width: 100%;
       border-collapse: collapse;
+    }
+    thead {
       background: #020617;
     }
     th, td {
-      border: 1px solid #1e293b;
-      padding: 8px 10px;
+      padding: 12px;
+      border-bottom: 1px solid #1e293b;
       text-align: left;
-      font-size: 14px;
     }
     th {
-      background: #020617;
       color: #38bdf8;
     }
-    tr:nth-child(even) {
+    tbody tr:hover {
       background: #020617;
     }
-    .tag {
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-size: 12px;
-      font-weight: bold;
+    .container {
+      padding: 24px;
     }
-    .FORCE { background: #7c2d12; }
-    .SYSTEM { background: #1e3a8a; }
   </style>
 </head>
 <body>
+  <h1>관리자 액션 로그</h1>
 
-<h1>🛠 관리자 액션 로그</h1>
-
-<table>
-  <thead>
-    <tr>
-      <th>시간</th>
-      <th>액션</th>
-      <th>상세</th>
-      <th>주체</th>
-    </tr>
-  </thead>
-  <tbody id="logBody"></tbody>
-</table>
+  <div class="container">
+    <table>
+      <thead>
+        <tr>
+          <th>시간</th>
+          <th>액션</th>
+          <th>상세</th>
+        </tr>
+      </thead>
+      <tbody id="logTable">
+      </tbody>
+    </table>
+  </div>
 
 <script>
 async function loadLogs() {
-  const res = await fetch("/api/admin/logs?limit=200");
+  const res = await fetch("/api/admin/logs");
   const data = await res.json();
-  const tbody = document.getElementById("logBody");
+
+  const tbody = document.getElementById("logTable");
   tbody.innerHTML = "";
 
-  data.logs.forEach(row => {
+  data.forEach(row => {
     const tr = document.createElement("tr");
-
-    const tagClass =
-      row.action.startsWith("FORCE") ? "FORCE" :
-      row.action.startsWith("SYSTEM") ? "SYSTEM" : "";
-
     tr.innerHTML = `
-      <td>${row.created_at}</td>
-      <td><span class="tag ${tagClass}">${row.action}</span></td>
-      <td>${row.detail ?? ""}</td>
-      <td>${row.actor}</td>
+      <td>${row.created_at || ""}</td>
+      <td>${row.action || ""}</td>
+      <td>${row.detail || ""}</td>
     `;
     tbody.appendChild(tr);
   });
 }
 
 loadLogs();
-setInterval(loadLogs, 5000);
 </script>
-
 </body>
 </html>

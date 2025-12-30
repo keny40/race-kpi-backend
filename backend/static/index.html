@@ -5,72 +5,75 @@
   <title>관리자 대시보드</title>
   <style>
     body {
-      background: #0b1220;
-      color: #fff;
+      margin: 0;
       font-family: Arial, sans-serif;
-      padding: 40px;
+      background: linear-gradient(180deg, #0b1220, #0f172a);
+      color: #e5e7eb;
+    }
+    h1 {
+      padding: 24px;
+      margin: 0;
+    }
+    .container {
+      padding: 24px;
+    }
+    .buttons {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
     }
     button {
-      padding: 12px 20px;
-      margin-right: 10px;
-      font-size: 14px;
+      padding: 12px 18px;
+      border: none;
+      border-radius: 6px;
       cursor: pointer;
+      font-size: 14px;
     }
+    .on { background: #22c55e; color: #022c22; }
+    .off { background: #ef4444; color: #450a0a; }
+    .refresh { background: #3b82f6; color: #0b1220; }
     pre {
-      background: #111827;
-      padding: 20px;
-      margin-top: 20px;
+      background: #020617;
+      border: 1px solid #1e293b;
+      padding: 16px;
+      border-radius: 6px;
+      max-height: 400px;
+      overflow: auto;
     }
   </style>
 </head>
 <body>
+  <h1>관리자 대시보드</h1>
 
-<h1>관리자 대시보드</h1>
+  <div class="container">
+    <div class="buttons">
+      <button class="on" onclick="forcePassOn()">FORCE PASS ON</button>
+      <button class="off" onclick="forcePassOff()">FORCE PASS OFF</button>
+      <button class="refresh" onclick="refreshLogs()">로그 새로고침</button>
+    </div>
 
-<script>
-  const ADMIN_TOKEN = prompt("관리자 비밀번호를 입력하세요")
-  if (!ADMIN_TOKEN) {
-    alert("접근 불가")
-    location.href = "/"
-  }
-</script>
-
-<button onclick="forcePass(true)">FORCE PASS ON</button>
-<button onclick="forcePass(false)">FORCE PASS OFF</button>
-<button onclick="loadLogs()">로그 새로고침</button>
-
-<pre id="output">대기 중...</pre>
+    <pre id="logBox">로그를 불러오는 중...</pre>
+  </div>
 
 <script>
-const headers = {
-  "Content-Type": "application/json",
-  "X-ADMIN-TOKEN": ADMIN_TOKEN
+async function forcePassOn() {
+  await fetch("/api/admin/force-pass/on", { method: "POST" });
+  await refreshLogs();
 }
 
-function forcePass(enabled) {
-  fetch("/api/admin/force_pass", {
-    method: "POST",
-    headers,
-    body: JSON.stringify({ enabled })
-  })
-  .then(r => r.json())
-  .then(d => {
-    document.getElementById("output").textContent =
-      "FORCE PASS = " + enabled
-  })
-  .catch(() => alert("인증 실패"))
+async function forcePassOff() {
+  await fetch("/api/admin/force-pass/off", { method: "POST" });
+  await refreshLogs();
 }
 
-function loadLogs() {
-  fetch("/api/admin/logs", { headers })
-    .then(r => r.json())
-    .then(d => {
-      document.getElementById("output").textContent =
-        JSON.stringify(d, null, 2)
-    })
-    .catch(() => alert("인증 실패"))
+async function refreshLogs() {
+  const res = await fetch("/api/admin/logs");
+  const data = await res.json();
+  document.getElementById("logBox").innerText =
+    JSON.stringify(data, null, 2);
 }
+
+refreshLogs();
 </script>
-
 </body>
 </html>
