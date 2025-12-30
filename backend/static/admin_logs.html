@@ -3,56 +3,27 @@
 <head>
   <meta charset="UTF-8" />
   <title>관리자 액션 로그</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: linear-gradient(180deg, #020617, #0f172a);
-      color: #e5e7eb;
-    }
-    h1 {
-      padding: 24px;
-      margin: 0;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    thead {
-      background: #020617;
-    }
-    th, td {
-      padding: 12px;
-      border-bottom: 1px solid #1e293b;
-      text-align: left;
-    }
-    th {
-      color: #38bdf8;
-    }
-    tbody tr:hover {
-      background: #020617;
-    }
-    .container {
-      padding: 24px;
-    }
-  </style>
 </head>
 <body>
-  <h1>관리자 액션 로그</h1>
 
-  <div class="container">
-    <table>
-      <thead>
-        <tr>
-          <th>시간</th>
-          <th>액션</th>
-          <th>상세</th>
-        </tr>
-      </thead>
-      <tbody id="logTable">
-      </tbody>
-    </table>
-  </div>
+<h1>관리자 액션 로그</h1>
+
+<div>
+  <a href="/api/admin/logs.csv" target="_blank">CSV 다운로드</a>
+  |
+  <a href="/api/admin/logs.pdf" target="_blank">PDF 다운로드</a>
+</div>
+
+<table border="1" cellpadding="8">
+  <thead>
+    <tr>
+      <th>시간</th>
+      <th>액션</th>
+      <th>상세</th>
+    </tr>
+  </thead>
+  <tbody id="logTable"></tbody>
+</table>
 
 <script>
 async function loadLogs() {
@@ -62,18 +33,20 @@ async function loadLogs() {
   const tbody = document.getElementById("logTable");
   tbody.innerHTML = "";
 
-  data.forEach(row => {
+  data.forEach(r => {
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${row.created_at || ""}</td>
-      <td>${row.action || ""}</td>
-      <td>${row.detail || ""}</td>
+      <td>${r.created_at || ""}</td>
+      <td>${r.action || ""}</td>
+      <td>${r.detail || ""}</td>
     `;
     tbody.appendChild(tr);
   });
 }
 
 loadLogs();
+setInterval(loadLogs, 5000);
 </script>
+
 </body>
 </html>

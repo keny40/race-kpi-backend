@@ -1,34 +1,63 @@
-from fastapi import APIRouter, Request, HTTPException
+from fastapi import APIRouter
+from fastapi.responses import StreamingResponse, FileResponse
 from backend.services.strategy_state import (
+    enable_force_pass,
+    disable_force_pass,
     is_force_pass_enabled,
-    force_pass_on,
-    force_pass_off
 )
-from backend.services.admin_log import log_action
-import os
+from backend.services.admin_log import get_logs
+from backend.services.slack_notifier import send_admin_action
+from backend.services.pdf_generator import generate_admin_log_pdf
+import csv
 
 router = APIRouter(prefix="/api/admin", tags=["admin-control"])
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "")
 
-def _auth(request: Request):
-    if request.headers.get("x-admin-token") != ADMIN_PASSWORD:
-        raise HTTPException(status_code=401, detail="unauthorized")
 
 @router.post("/force-pass/on")
-def force_on(request: Request):
-    _auth(request)
-    force_pass_on()
-    log_action("FORCE_PASS_ON", "MANUAL")
-    return {"status": "ok", "forced": True}
+def force_pass_on():
+    enable_force_pass(reason="MANUAL")
+    send_admin_action("FORCE_PASS_ON", "manual")
+    return {"status": "ok"}
+
 
 @router.post("/force-pass/off")
-def force_off(request: Request):
-    _auth(request)
-    force_pass_off()
-    log_action("FORCE_PASS_OFF", "MANUAL")
-    return {"status": "ok", "forced": False}
+def force_pass_off():
+    disable_force_pass()
+    send_admin_action("FORCE_PASS_OFF", "manual")
+    return {"status": "ok"}
 
-@router.get("/force-pass/status")
-def force_status(request: Request):
-    _auth(request)
-    return {"forced": is_force_pass_enabled()}
+
+@router.get("/status")
+def admin_status():
+    return {"force_pass": is_force_pass_enabled()}
+
+
+@router.get("/logs")
+def admin_logs():
+    return get_logs()
+
+
+@router.get("/logs.csv")
+def download_logs_csv():
+    logs = get_logs()
+
+    def gen():
+        yield "created_at,action,detail\n"
+        for r in logs:
+            yield f"{r['created_at']},{r['action']},{r['detail']}\n"
+
+    return StreamingResponse(
+        gen(),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=admin_logs.csv"},
+    )
+
+
+@router.get("/logs.pdf")
+def download_logs_pdf():
+    path = generate_admin_log_pdf()
+    return FileResponse(
+        path,
+        media_type="application/pdf",
+        filename="admin_logs.pdf",
+    )
