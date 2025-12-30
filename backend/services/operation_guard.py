@@ -1,9 +1,11 @@
 from datetime import datetime
 import os
+import requests
 
 RED_SCORE_LIMIT = float(os.getenv("RED_SCORE_LIMIT", "3.0"))
 RED_CONF_THRESHOLD = float(os.getenv("RED_CONF_THRESHOLD", "0.55"))
 RED_DECAY = float(os.getenv("RED_DECAY", "0.5"))
+SLACK_WEBHOOK_URL = os.getenv("SLACK_WEBHOOK_URL")
 
 STATE = {
     "run_mode": "ACTIVE",
@@ -30,25 +32,37 @@ def set_run_mode(mode: str, reason="MANUAL"):
 def set_force_pass(on: bool):
     STATE["force_pass"] = on
 
-def record_prediction(decision: str, confidence: float):
-    """
-    RED 판단 고도화 로직
+def _slack_notify(text: str):
+    if not SLACK_WEBHOOK_URL:
+        return
+    try:
+        requests.post(
+            SLACK_WEBHOOK_URL,
+            json={"text": text},
+            timeout=3
+        )
+    except Exception:
+        pass
 
-    - RED + confidence >= threshold → 가중치 누적
-    - confidence 비례 점수 부여
-    - 기준 미달 시 score 감소(decay)
-    """
+def record_prediction(decision: str, confidence: float):
     auto_paused = False
 
     if decision == "RED" and confidence >= RED_CONF_THRESHOLD:
-        gain = round(confidence, 2)
-        STATE["red_score"] += gain
+        STATE["red_score"] += round(confidence, 2)
     else:
         STATE["red_score"] = max(0.0, STATE["red_score"] - RED_DECAY)
 
     if STATE["red_score"] >= RED_SCORE_LIMIT:
         set_run_mode("paused", reason="AUTO_PAUSE")
         auto_paused = True
+
+        _slack_notify(
+            "🚨 AUTO_PAUSE 발생\n"
+            f"- RED score: {STATE['red_score']}\n"
+            f"- threshold: {RED_SCORE_LIMIT}\n"
+            f"- confidence >= {RED_CONF_THRESHOLD}\n"
+            f"- time: {STATE['last_updated']}"
+        )
 
     return {
         "red_score": round(STATE["red_score"], 2),
