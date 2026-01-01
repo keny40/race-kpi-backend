@@ -1,55 +1,63 @@
 # backend/services/strategy_state.py
-
 from datetime import datetime
-from backend.services.slack_notifier import send_red_alert
 
-# === FORCE PASS 상태 (전역 단일 소스) ===
-_FORCE_PASS_ENABLED = False
-_FORCE_PASS_REASON = None
-_FORCE_PASS_AT = None
+# =====================================================
+# 전역 운영 상태 (Single Source of Truth)
+# =====================================================
 
+_STATE = {
+    "run_mode": "ACTIVE",     # ACTIVE | PAUSED
+    "paused": False,
+    "force_pass": False,
+    "updated_at": datetime.utcnow().isoformat()
+}
 
-# === 상태 조회 ===
-def is_force_pass_enabled() -> bool:
-    return _FORCE_PASS_ENABLED
+# =====================================================
+# READ
+# =====================================================
 
-
-def get_force_pass_status() -> dict:
+def get_run_mode_status():
     return {
-        "enabled": _FORCE_PASS_ENABLED,
-        "reason": _FORCE_PASS_REASON,
-        "since": _FORCE_PASS_AT,
+        "run_mode": _STATE["run_mode"],
+        "paused": _STATE["paused"],
+        "force_pass": _STATE["force_pass"],
+        "updated_at": _STATE["updated_at"]
     }
 
+def is_paused() -> bool:
+    return _STATE["paused"]
 
-# === 내부 구현 (정식 API) ===
-def enable_force_pass(reason: str = "MANUAL", payload: dict | None = None):
-    global _FORCE_PASS_ENABLED, _FORCE_PASS_REASON, _FORCE_PASS_AT
+def is_force_pass_enabled() -> bool:
+    return _STATE["force_pass"]
 
-    _FORCE_PASS_ENABLED = True
-    _FORCE_PASS_REASON = reason
-    _FORCE_PASS_AT = datetime.utcnow().isoformat()
+# =====================================================
+# WRITE (표준 API)
+# =====================================================
 
-    if payload:
-        send_red_alert(payload)
+def set_run_mode_active():
+    _STATE["run_mode"] = "ACTIVE"
+    _STATE["paused"] = False
+    _STATE["updated_at"] = datetime.utcnow().isoformat()
+    return get_run_mode_status()
 
+def set_run_mode_paused():
+    _STATE["run_mode"] = "PAUSED"
+    _STATE["paused"] = True
+    _STATE["updated_at"] = datetime.utcnow().isoformat()
+    return get_run_mode_status()
+
+def set_force_pass(enabled: bool):
+    _STATE["force_pass"] = enabled
+    _STATE["updated_at"] = datetime.utcnow().isoformat()
+    return get_run_mode_status()
+
+# =====================================================
+# 🔥 호환용 ALIAS (중요)
+# 기존 코드에서 어떤 이름을 써도 안 깨지게
+# =====================================================
+
+def enable_force_pass():
+    return set_force_pass(True)
 
 def disable_force_pass():
-    global _FORCE_PASS_ENABLED, _FORCE_PASS_REASON, _FORCE_PASS_AT
-
-    _FORCE_PASS_ENABLED = False
-    _FORCE_PASS_REASON = None
-    _FORCE_PASS_AT = None
-
-
-# === 🔹 admin / legacy 호환 alias ===
-def force_pass(reason: str = "MANUAL"):
-    enable_force_pass(reason=reason)
-
-
-def force_pass_on(reason: str = "MANUAL"):
-    enable_force_pass(reason=reason)
-
-
-def force_pass_off():
-    disable_force_pass()
+    return set_force_pass(False)

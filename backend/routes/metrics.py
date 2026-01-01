@@ -1,36 +1,31 @@
 from fastapi import APIRouter
-from pydantic import BaseModel
-from datetime import datetime
+import sqlite3
+import os
 
-router = APIRouter()
+router = APIRouter(prefix="/metrics", tags=["metrics"])
 
-EXISTS_LOGS = []
+DB_PATH = os.getenv("DB_PATH", "races.db")
 
-class ExistsCheckLog(BaseModel):
-    race_id: str
-    exists: bool
-    count: int
-    timestamp: datetime | None = None
+def _conn():
+    c = sqlite3.connect(DB_PATH)
+    c.row_factory = sqlite3.Row
+    return c
 
-@router.post("/metrics/exists-check")
-def log_exists_check(payload: ExistsCheckLog):
-    payload.timestamp = datetime.utcnow()
-    EXISTS_LOGS.append(payload.dict())
-    return {"ok": True}
+@router.get("")
+def metrics():
+    conn = _conn()
+    cur = conn.cursor()
 
-@router.get("/metrics/exists-timeline")
-def exists_timeline(limit: int = 50):
-    return {
-        "items": EXISTS_LOGS[-limit:][::-1]
-    }
+    logs = cur.execute("SELECT COUNT(*) c FROM ops_logs").fetchone()["c"]
+    runs = cur.execute("SELECT COUNT(*) c FROM ops_runs").fetchone()["c"]
+    reds = cur.execute(
+        "SELECT COUNT(*) c FROM ops_runs WHERE is_red=1"
+    ).fetchone()["c"]
 
-STREAK_LOGS = []
+    conn.close()
 
-@router.post("/metrics/streak-log")
-def log_streak(payload: dict):
-    STREAK_LOGS.append(payload)
-    return {"ok": True}
-
-@router.get("/metrics/streak-log")
-def get_streak_logs(limit: int = 100):
-    return {"items": STREAK_LOGS[-limit:][::-1]}
+    return (
+        f"ops_logs_total {logs}\n"
+        f"ops_runs_total {runs}\n"
+        f"ops_red_total {reds}\n"
+    )

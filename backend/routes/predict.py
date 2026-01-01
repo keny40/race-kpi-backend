@@ -1,46 +1,88 @@
 from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
 from datetime import datetime
-from backend.services.operation_guard import (
-    get_status,
-    record_prediction
-)
+import sqlite3
+from pathlib import Path
 
+from backend.services.season import SeasonManager
+from backend.services.risk_guard import evaluate_and_maybe_pause
+
+DB_PATH = Path("races.db")
 router = APIRouter(prefix="/api", tags=["predict"])
 
+def _conn():
+    con = sqlite3.connect(DB_PATH)
+    con.row_factory = sqlite3.Row
+    return con
 
-@router.get("/predict")
+class PredictRequest(BaseModel):
+    race_id: str
+    horses: list[dict] | None = None
+    meta: dict | None = None
+
 @router.post("/predict")
-def predict():
-    state = get_status()
+def predict(req: PredictRequest):
+    ok, reason = SeasonManager.require_not_paused()
+    if not ok:
+        raise HTTPException(status_code=423, detail=f"paused: {reason}")
 
-    # 1️⃣ PAUSE 가드
-    if state["paused"] or state["run_mode"] == "PAUSED":
-        raise HTTPException(
-            status_code=403,
-            detail="PAUSED: predict blocked"
+    race_id = req.race_id.strip()
+
+    features = {
+        "volatility": float((req.meta or {}).get("volatility", 0.10)),
+        "disagreement": float((req.meta or {}).get("disagreement", 0.10)),
+        "data_quality": float((req.meta or {}).get("data_quality", 0.90)),
+    }
+
+    guard = evaluate_and_maybe_pause(
+        race_id=race_id,
+        features=features,
+        meta={"source": "predict", "client_meta": req.meta or {}}
+    )
+
+    decision = "PASS"
+    confidence = 0.50
+
+    if guard["is_red"]:
+        decision = "PASS"
+        confidence = 0.10
+    else:
+        decision = "PICK"
+        confidence = 0.70
+
+    con = _conn()
+    cur = con.cursor()
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS predictions (
+            race_id TEXT PRIMARY KEY,
+            decision TEXT NOT NULL,
+            confidence REAL NOT NULL,
+            created_at TEXT NOT NULL,
+            red_score REAL NOT NULL,
+            red_threshold REAL NOT NULL,
+            red_reason TEXT NOT NULL
         )
+    """)
+    cur.execute("""
+        INSERT OR REPLACE INTO predictions
+        (race_id, decision, confidence, created_at, red_score, red_threshold, red_reason)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    """, (
+        race_id,
+        decision,
+        float(confidence),
+        datetime.utcnow().isoformat(),
+        float(guard["score"]),
+        float(guard["threshold"]),
+        str(guard["reason"])
+    ))
+    con.commit()
+    con.close()
 
-    # 2️⃣ FORCE PASS
-    if state["force_pass"]:
-        return {
-            "decision": "PASS",
-            "confidence": 0.0,
-            "reason": "FORCE_PASS",
-            "timestamp": datetime.utcnow().isoformat()
-        }
-
-    # 3️⃣ 테스트용 예측 (나중에 실제 로직으로 교체)
-    decision = "RED"
-    confidence = 0.63
-
-    red_info = record_prediction(decision, confidence)
-
-    # 4️⃣ 정상 반환
     return {
+        "race_id": race_id,
         "decision": decision,
         "confidence": confidence,
-        "red_score": red_info["red_score"],
-        "auto_paused": red_info["auto_paused"],
-        "run_mode": get_status()["run_mode"],
-        "timestamp": datetime.utcnow().isoformat()
+        "risk": guard,
+        "season": SeasonManager.get_status()
     }

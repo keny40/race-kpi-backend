@@ -1,74 +1,41 @@
 import os
-import smtplib
-from email.message import EmailMessage
+import json
 import requests
+from typing import Any, Dict, Optional
 
-SLACK_WEBHOOK_URL = os.getenv("SLACK_WEBHOOK_URL")
-SLACK_BOT_TOKEN = os.getenv("SLACK_BOT_TOKEN")
-SLACK_CHANNEL = os.getenv("SLACK_CHANNEL")
+SLACK_WEBHOOK_URL = os.getenv("SLACK_WEBHOOK_URL", "").strip()
 
-SMTP_HOST = os.getenv("SMTP_HOST")
-SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
-SMTP_USER = os.getenv("SMTP_USER")
-SMTP_PASS = os.getenv("SMTP_PASS")
-MAIL_TO = os.getenv("MAIL_TO")
-MAIL_FROM = os.getenv("MAIL_FROM", SMTP_USER)
+def _top_contrib(contrib: Dict[str, Any], n: int = 2) -> str:
+    items = []
+    for k, v in (contrib or {}).items():
+        try:
+            items.append((k, float(v)))
+        except Exception:
+            continue
+    items.sort(key=lambda x: x[1], reverse=True)
+    return ", ".join([f"{k}={v:.3f}" for k, v in items[:n]]) if items else "n/a"
 
-def send_slack_text(text: str):
+def send_slack(text: str, extra: Optional[Dict[str, Any]] = None) -> None:
     if not SLACK_WEBHOOK_URL:
         return
+    payload = {"text": text}
+    if extra:
+        payload["attachments"] = [{"text": json.dumps(extra, ensure_ascii=False)[:1500]}]
     try:
-        requests.post(SLACK_WEBHOOK_URL, json={"text": text}, timeout=10)
+        requests.post(SLACK_WEBHOOK_URL, json=payload, timeout=6)
     except Exception:
         pass
 
-def send_slack_file(text: str, pdf_path: str):
-    if not (SLACK_BOT_TOKEN and SLACK_CHANNEL):
-        return
-    try:
-        headers = {"Authorization": f"Bearer {SLACK_BOT_TOKEN}"}
-        with open(pdf_path, "rb") as f:
-            files = {"file": f}
-            data = {
-                "channels": SLACK_CHANNEL,
-                "initial_comment": text,
-                "filename": os.path.basename(pdf_path),
-                "title": os.path.basename(pdf_path),
-            }
-            requests.post(
-                "https://slack.com/api/files.upload",
-                headers=headers,
-                files=files,
-                data=data,
-                timeout=30
-            )
-    except Exception:
-        pass
+def notify_auto_pause(race_id: str, risk: Dict[str, Any]) -> None:
+    top = _top_contrib(risk.get("contrib") or {})
+    score = float(risk.get("score") or 0.0)
+    thr = float(risk.get("threshold") or 0.0)
+    streak = int(risk.get("red_streak") or 0)
+    reason = str(risk.get("reason") or "AUTO_PAUSE")
+    send_slack(
+        f"🟥 AUTO_PAUSE 발생: {reason}\nrace={race_id} score={score:.3f} thr={thr:.3f} streak={streak}\nTOP: {top}",
+        extra={"risk": risk}
+    )
 
-def send_mail(subject: str, body: str, attachment_path: str | None = None):
-    if not (SMTP_HOST and SMTP_USER and SMTP_PASS and MAIL_TO):
-        return
-
-    msg = EmailMessage()
-    msg["Subject"] = subject
-    msg["From"] = MAIL_FROM
-    msg["To"] = MAIL_TO
-    msg.set_content(body)
-
-    if attachment_path:
-        with open(attachment_path, "rb") as f:
-            data = f.read()
-        msg.add_attachment(
-            data,
-            maintype="application",
-            subtype="pdf",
-            filename=os.path.basename(attachment_path),
-        )
-
-    try:
-        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as s:
-            s.starttls()
-            s.login(SMTP_USER, SMTP_PASS)
-            s.send_message(msg)
-    except Exception:
-        pass
+def notify_resume(mode: str, note: str = "") -> None:
+    send_slack(f"🟩 RESUME: {mode} {note}".strip())
