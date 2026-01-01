@@ -12,30 +12,31 @@ _scheduler = {
     "interval_sec": 30,
 }
 
+def run_once():
+    race = generate_mock_race()
+
+    insert_log(
+        action="MOCK_RUN",
+        level="INFO",
+        detail={
+            "race_id": race["race_id"],
+            "track": race["track"],
+            "race_no": race["race_no"],
+            "winner": race["winner"],
+            "force_pass": is_force_pass(),
+        },
+    )
+
 def _loop():
     while _scheduler["running"]:
         if is_paused():
             time.sleep(_scheduler["interval_sec"])
             continue
 
-        race = generate_mock_race()
-
-        insert_log(
-            action="MOCK_RUN",
-            level="INFO",
-            detail={
-                "race_id": race["race_id"],
-                "track": race["track"],
-                "race_no": race["race_no"],
-                "winner": race["winner"],
-                "force_pass": is_force_pass(),
-            },
-        )
-
+        run_once()
         time.sleep(_scheduler["interval_sec"])
 
-
-def start():
+def start_scheduler():
     if _scheduler["running"]:
         return
 
@@ -45,12 +46,6 @@ def start():
 
     insert_log(action="SCHEDULER_START", level="INFO")
 
-
-def stop():
+def stop_scheduler():
     _scheduler["running"] = False
     insert_log(action="SCHEDULER_STOP", level="INFO")
-
-
-def set_interval(sec: int):
-    _scheduler["interval_sec"] = max(5, sec)
-    insert_log(action="SCHEDULER_INTERVAL", level="INFO", detail={"sec": sec})
