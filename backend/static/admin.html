@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<title>Race AI Admin Dashboard</title>
+<style>
+  body {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont;
+    background: #0f1115;
+    color: #e5e7eb;
+    margin: 0;
+    padding: 16px;
+  }
+
+  h1 {
+    margin: 0 0 12px 0;
+    font-size: 22px;
+  }
+
+  .controls {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  input, button {
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: none;
+    font-size: 14px;
+  }
+
+  button {
+    cursor: pointer;
+    background: #2563eb;
+    color: white;
+  }
+
+  button.secondary {
+    background: #374151;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 12px;
+  }
+
+  th, td {
+    padding: 8px;
+    text-align: center;
+    border-bottom: 1px solid #1f2937;
+    font-size: 14px;
+  }
+
+  th {
+    background: #111827;
+    position: sticky;
+    top: 0;
+  }
+
+  tr.pass {
+    background: rgba(239, 68, 68, 0.12);
+  }
+
+  tr.go {
+    background: rgba(34, 197, 94, 0.12);
+  }
+
+  .badge {
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 12px;
+  }
+
+  .badge.pass {
+    background: #7f1d1d;
+    color: #fecaca;
+  }
+
+  .badge.go {
+    background: #14532d;
+    color: #bbf7d0;
+  }
+
+  .bar {
+    height: 10px;
+    background: #1f2937;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .bar > div {
+    height: 100%;
+    background: linear-gradient(90deg, #22c55e, #3b82f6);
+  }
+
+  .small {
+    color: #9ca3af;
+    font-size: 12px;
+  }
+</style>
+</head>
+<body>
+
+<h1>🏇 Race AI 관리자 대시보드</h1>
+
+<div class="controls">
+  <input id="raceId" placeholder="race_id (예: SEOUL_20260105)" style="width:220px" />
+  <button onclick="loadDecisions()">조회</button>
+  <button class="secondary" onclick="recompute()">재계산</button>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>경주</th>
+      <th>상태</th>
+      <th>CONF</th>
+      <th>CONF 바</th>
+      <th>TOP 말</th>
+      <th>점수</th>
+      <th>기준선</th>
+    </tr>
+  </thead>
+  <tbody id="rows"></tbody>
+</table>
+
+<script>
+const API = "/api/race";
+
+async function loadDecisions() {
+  const raceId = document.getElementById("raceId").value.trim();
+  if (!raceId) return alert("race_id 입력");
+
+  const res = await fetch(`${API}/decision?race_id=${raceId}`);
+  const data = await res.json();
+  render(data.items || []);
+}
+
+async function recompute() {
+  const raceId = document.getElementById("raceId").value.trim();
+  if (!raceId) return alert("race_id 입력");
+
+  await fetch(`${API}/decision/compute?race_id=${raceId}`, { method: "POST" });
+  loadDecisions();
+}
+
+function render(items) {
+  const tbody = document.getElementById("rows");
+  tbody.innerHTML = "";
+
+  items.forEach(it => {
+    const tr = document.createElement("tr");
+    tr.className = it.passed ? "pass" : "go";
+
+    const badge = it.passed
+      ? `<span class="badge pass">PASS</span>`
+      : `<span class="badge go">GO</span>`;
+
+    const confPct = Math.round(it.confidence * 100);
+
+    tr.innerHTML = `
+      <td>${it.race_no}</td>
+      <td>${badge}</td>
+      <td>${confPct}%</td>
+      <td>
+        <div class="bar">
+          <div style="width:${confPct}%"></div>
+        </div>
+      </td>
+      <td>${it.top_horse_name || "-"}</td>
+      <td>${(it.top_score || 0).toFixed(3)}</td>
+      <td class="small">${(it.threshold || 0).toFixed(2)}</td>
+    `;
+
+    tbody.appendChild(tr);
+  });
+}
+</script>
+
+</body>
+</html>

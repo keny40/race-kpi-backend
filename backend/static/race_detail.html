@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>경주 상세</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .box { border: 1px solid #ddd; padding: 12px; margin-bottom: 14px; background:#fafafa; }
+    .badge { display:inline-block; padding:2px 8px; border-radius:10px; font-weight:bold; }
+    .go { background:#e8f5e9; color:#2e7d32; }
+    .pass { background:#eeeeee; color:#616161; }
+
+    .grid { display:grid; grid-template-columns: repeat(10, 1fr); gap: 6px; }
+    .cell {
+      height: 32px;
+      border-radius: 6px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size: 12px;
+      border:1px solid #ddd;
+      user-select:none;
+    }
+    .rowbar { height: 12px; background:#eee; border-radius: 6px; overflow:hidden; width: 260px; display:inline-block; vertical-align:middle; }
+    .fill { height: 12px; background:#2196f3; }
+    .small { font-size: 12px; color:#555; }
+  </style>
+</head>
+<body>
+
+<h2 id="title">경주 상세</h2>
+
+<div class="box" id="raceInfo"></div>
+
+<div class="box">
+  <h3>예측 요약</h3>
+  <div id="predictBox">로딩 중...</div>
+</div>
+
+<div class="box">
+  <h3>말별 점수 히트맵</h3>
+  <div class="small">점수 높을수록 진하게 표시됩니다</div>
+  <div id="heatmap" class="grid" style="margin-top:10px;"></div>
+</div>
+
+<script>
+const params = new URLSearchParams(location.search);
+const raceId = params.get("race_id");
+
+function clamp01(x){ return Math.max(0, Math.min(1, x)); }
+
+// 점수 -> 투명도 기반 히트맵(색 고정 최소화)
+function scoreStyle(score){
+  const s = clamp01(score);
+  const alpha = 0.15 + (s * 0.85);
+  return `background: rgba(33,150,243,${alpha}); color: #111;`;
+}
+
+async function loadDetail() {
+  const res = await fetch(`/api/race/${encodeURIComponent(raceId)}`);
+  const data = await res.json();
+
+  const r = data.race;
+  document.getElementById("title").innerText = `경주 ${r.race_no ?? "-"}R`;
+
+  document.getElementById("raceInfo").innerHTML = `
+    출발: ${r.start_time ?? "-"}<br/>
+    거리: ${r.distance ?? "-"}<br/>
+    등급: ${r.grade ?? "-"}<br/>
+    race_id: ${r.race_id}
+  `;
+
+  const predict = (data.detail && data.detail.predict) ? data.detail.predict : null;
+
+  if (!predict) {
+    document.getElementById("predictBox").innerHTML = `예측 데이터 없음`;
+    return;
+  }
+
+  const decision = predict.decision || "PASS";
+  const conf = Number(predict.confidence ?? 0);
+  const pct = Math.round(conf * 100);
+
+  const top = (predict.top_horses || []).join(", ");
+  document.getElementById("predictBox").innerHTML = `
+    판단: <span class="badge ${decision === "GO" ? "go" : "pass"}">${decision}</span><br/><br/>
+    CONFIDENCE: ${pct}% 
+    <span class="rowbar"><span class="fill" style="width:${Math.round(conf*260)}px;"></span></span>
+    <br/><br/>
+    TOP: ${top || "-"}
+  `;
+
+  const hs = predict.horse_scores || [];
+  const heat = document.getElementById("heatmap");
+  heat.innerHTML = "";
+
+  if (!hs.length) {
+    heat.innerHTML = `<div class="small">horse_scores 없음</div>`;
+    return;
+  }
+
+  // 점수 높은 순으로 정렬해서 시각적으로 보기 좋게
+  hs.slice().sort((a,b)=> (b.score||0)-(a.score||0)).forEach(h => {
+    const no = h.horse_no ?? "-";
+    const sc = Number(h.score ?? 0);
+    const cell = document.createElement("div");
+    cell.className = "cell";
+    cell.style = scoreStyle(sc);
+    cell.title = `horse ${no} / score ${sc.toFixed(3)}`;
+    cell.innerText = `${no} (${sc.toFixed(2)})`;
+    heat.appendChild(cell);
+  });
+}
+
+loadDetail();
+</script>
+
+<div class="box">
+  <h3>재예측 히스토리</h3>
+  <ul id="history"></ul>
+</div>
+
+<script>
+async function loadHistory(){
+  const r = await fetch(`/api/predict_history/${raceId}`);
+  if(!r.ok) return;
+  const h = (await r.json()).history || [];
+  document.getElementById("history").innerHTML =
+    h.map((x,i)=>`<li>#${i+1} ${x.decision} (${(x.confidence*100).toFixed(1)}%)</li>`).join("");
+}
+loadHistory();
+</script>
+
+
+</body>
+</html>

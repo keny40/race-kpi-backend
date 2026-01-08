@@ -39,3 +39,11 @@ def notify_auto_pause(race_id: str, risk: Dict[str, Any]) -> None:
 
 def notify_resume(mode: str, note: str = "") -> None:
     send_slack(f"🟩 RESUME: {mode} {note}".strip())
+
+# backend/services/notify.py
+
+def notify_slack(message: str):
+    """
+    Slack 연동 전 임시 더미 함수
+    """
+    print(f"[SLACK MOCK] {message}")

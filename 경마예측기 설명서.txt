@@ -8,10 +8,12 @@ http://127.0.0.1:8000/api/kpi/match
 http://127.0.0.1:8000/ui/results
 http://127.0.0.1:8000/docs
 
-git add backend/routes/kpi_status.py backend/app.py
-git commit -m "feat: add KPI RED/YELLOW/GREEN status logic"
-git push
-
+경주 목록	                필수
+말 프로필(레이팅)	필수
+말 성과(승률)	        필수
+기수 프로필	       🔶 있으면 강력
+조교사 프로필	       후순위
+배당	                       다음 단계
 
 예측 → 로그 저장 → 피드백 반영 → 대시보드 표시
 여기까지 “말 경주 예측 + 실측 성능 대시보드 1차 버전” 완성입니다

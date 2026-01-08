@@ -1,115 +1,40 @@
-# backend/routes/kpi_report.py
-
 from fastapi import APIRouter
-from fastapi.responses import FileResponse
-import sqlite3
-import os
-from datetime import datetime
-from reportlab.lib.pagesizes import A4
-from reportlab.pdfgen import canvas
+from fastapi.responses import StreamingResponse
+import io
+import csv
+from backend.services.db import get_conn
 
-DB_PATH = os.getenv("DB_PATH", "races.db")
-
-router = APIRouter(prefix="/api/kpi/report", tags=["kpi-report"])
+router = APIRouter(prefix="/api/kpi", tags=["kpi"])
 
 
-def _conn():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
-
-
-def build_kpi_pdf(path: str, executive: bool = False):
-    conn = _conn()
+@router.get("/report.csv")
+def kpi_report_csv():
+    """
+    RUN만 CSV로 내보내기
+    """
+    conn = get_conn()
     cur = conn.cursor()
 
-    rows = cur.execute("""
-        SELECT
-            race_id,
-            decision,
-            winner,
-            confidence,
-            result
-        FROM v_race_match
-        ORDER BY race_id
-    """).fetchall()
+    rows = cur.execute(
+        """
+        SELECT id, race_id, predicted_horse_no, confidence, created_at
+          FROM predictions
+         WHERE passed=0
+         ORDER BY id DESC
+        """
+    ).fetchall()
 
-    total = len(rows)
-    hit = sum(1 for r in rows if r["result"] == "HIT")
-    miss = sum(1 for r in rows if r["result"] == "MISS")
-    pass_cnt = sum(1 for r in rows if r["result"] == "PASS")
-
-    accuracy = round(hit / (hit + miss), 3) if (hit + miss) > 0 else 0
-
-    c = canvas.Canvas(path, pagesize=A4)
-    width, height = A4
-
-    y = height - 50
-    c.setFont("Helvetica-Bold", 16)
-    c.drawString(40, y, "Race KPI Report" + (" (Executive)" if executive else ""))
-    y -= 40
-
-    c.setFont("Helvetica", 11)
-    c.drawString(40, y, f"Total predictions: {total}")
-    y -= 20
-    c.drawString(40, y, f"HIT: {hit}")
-    y -= 20
-    c.drawString(40, y, f"MISS: {miss}")
-    y -= 20
-    c.drawString(40, y, f"PASS: {pass_cnt}")
-    y -= 20
-    c.drawString(40, y, f"Accuracy: {accuracy}")
-    y -= 40
-
-    if not executive:
-        c.setFont("Helvetica-Bold", 12)
-        c.drawString(40, y, "Details")
-        y -= 20
-        c.setFont("Helvetica", 10)
-
-        for r in rows:
-            line = (
-                f"{r['race_id']} | "
-                f"decision={r['decision']} | "
-                f"winner={r['winner']} | "
-                f"conf={r['confidence']} | "
-                f"result={r['result']}"
-            )
-            c.drawString(40, y, line)
-            y -= 14
-            if y < 50:
-                c.showPage()
-                y = height - 50
-                c.setFont("Helvetica", 10)
-
-    c.showPage()
-    c.save()
     conn.close()
 
+    buf = io.StringIO()
+    w = csv.writer(buf)
+    w.writerow(["id", "race_id", "predicted_horse_no", "confidence", "created_at"])
+    for r in rows:
+        w.writerow([r["id"], r["race_id"], r["predicted_horse_no"], r["confidence"], r["created_at"]])
 
-@router.post("/pdf")
-def report_pdf():
-    filename = f"kpi_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.pdf"
-    path = os.path.join("/tmp", filename)
-
-    build_kpi_pdf(path, executive=False)
-
-    return FileResponse(
-        path,
-        media_type="application/pdf",
-        filename=filename
-    )
-
-
-@router.post("/executive")
-def executive_pdf():
-    filename = f"executive_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.pdf"
-    path = os.path.join("/tmp", filename)
-
-    build_kpi_pdf(path, executive=True)
-
-    return FileResponse(
-        path,
-        media_type="application/pdf",
-        filename=filename
+    buf.seek(0)
+    return StreamingResponse(
+        iter([buf.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=kpi_run_only.csv"},
     )

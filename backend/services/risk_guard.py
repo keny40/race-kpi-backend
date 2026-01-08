@@ -1,81 +1,85 @@
 # backend/services/risk_guard.py
-import threading
+from typing import Optional, Dict, Any
+from backend.services.db import get_conn
 
-from backend.services.log_store import insert_log
-from backend.services.slack_notify import send_red_alert, send_reset_notice
+# ====== State ======
+_PAUSED = False
 
-# =========================
-# Risk settings / state
-# =========================
-_lock = threading.Lock()
+# ====== Tunables (env로 빼도 됨) ======
+MIN_SAMPLE = 10          # 최소 표본
+WINDOW = 50              # 평가 구간(최근 N)
+EV_PAUSE_TH = -0.05      # EV가 이보다 낮으면 위험
+HIT_PAUSE_TH = 0.45      # BET hit rate가 이보다 낮으면 위험
+MISS_STREAK_N = 5        # MISS 연속 N이면 즉시 중단
 
-_settings = {
-    "red_threshold": 0.85,     # 점수 기준 예시
-    "red_streak_pause": 3,     # 연속 RED N회면 pause
-}
+def is_paused() -> bool:
+    return _PAUSED
 
-_state = {
-    "paused": False,
-    "red_streak": 0,
-    "last": {
-        "score": 0.0,
-        "is_red": False,
-        "reasons": {},
-    }
-}
+def pause(reason: str):
+    global _PAUSED
+    _PAUSED = True
+    print(f"[AUTO_PAUSE] {reason}")
 
-
-def get_risk_settings():
-    with _lock:
-        return dict(_settings)
+def resume():
+    global _PAUSED
+    _PAUSED = False
+    print("[RESUME] manual/auto resume")
 
 
-def is_paused():
-    with _lock:
-        return bool(_state["paused"])
-
-
-def reset_red_streak():
-    with _lock:
-        before = {"paused": _state["paused"], "red_streak": _state["red_streak"]}
-        _state["red_streak"] = 0
-        _state["paused"] = False
-        after = {"paused": _state["paused"], "red_streak": _state["red_streak"]}
-
-    insert_log("RESET", {"before": before, "after": after})
-    send_reset_notice(before, after)
-    return {"before": before, "after": after}
-
-
-def evaluate_and_maybe_pause(score: float, reasons: dict):
+def evaluate_all_and_maybe_pause():
     """
-    return:
-      {
-        score, is_red, streak, paused, reasons
-      }
+    혼합 로직:
+    1) MISS 연속 N이면 즉시 중단
+    2) 표본 >= MIN_SAMPLE 일 때만 EV+HIT 혼합 판단
+       - (EV < EV_PAUSE_TH) AND (HIT_RATE < HIT_PAUSE_TH) → 중단
     """
-    with _lock:
-        red = float(score) >= float(_settings["red_threshold"])
-        if red:
-            _state["red_streak"] += 1
-        else:
-            _state["red_streak"] = 0
+    conn = get_conn()
+    cur = conn.cursor()
 
-        if _state["red_streak"] >= int(_settings["red_streak_pause"]):
-            _state["paused"] = True
+    # 1) MISS streak
+    streak = cur.execute("""
+        SELECT hit_miss
+        FROM pre_race_run_history
+        ORDER BY run_at DESC
+        LIMIT ?
+    """, (MISS_STREAK_N,)).fetchall()
 
-        _state["last"] = {"score": float(score), "is_red": red, "reasons": reasons or {}}
+    if len(streak) == MISS_STREAK_N and all((r["hit_miss"] == "MISS") for r in streak):
+        pause(f"MISS_STREAK_{MISS_STREAK_N}")
+        return
 
-        out = {
-            "score": float(score),
-            "is_red": bool(red),
-            "streak": int(_state["red_streak"]),
-            "paused": bool(_state["paused"]),
-            "reasons": reasons or {},
-        }
+    # 2) EV + HIT (odds 있는 표본만)
+    row = cur.execute("""
+    WITH recent AS (
+      SELECT *
+      FROM pre_race_run_history
+      WHERE odds IS NOT NULL
+      ORDER BY run_at DESC
+      LIMIT ?
+    )
+    SELECT
+      COUNT(*) AS sample_size,
+      SUM(CASE WHEN bet_pass='BET' THEN 1 ELSE 0 END) AS bet_count,
+      ROUND(
+        SUM(CASE WHEN bet_pass='BET' AND hit_miss='HIT' THEN 1 ELSE 0 END) * 1.0 /
+        NULLIF(SUM(CASE WHEN bet_pass='BET' THEN 1 ELSE 0 END), 0), 3
+      ) AS hit_rate,
+      ROUND(
+        SUM(CASE WHEN bet_pass='BET' AND hit_miss='HIT' THEN odds ELSE 0 END) * 1.0 /
+        NULLIF(SUM(CASE WHEN bet_pass='BET' THEN 1 ELSE 0 END), 0)
+        - 1, 3
+      ) AS ev
+    FROM recent;
+    """, (WINDOW,)).fetchone()
 
-    # 로그 + 슬랙은 lock 밖에서
-    insert_log("RUN", out)
-    if out["is_red"]:
-        send_red_alert(out["score"], out["streak"], out["paused"], out["reasons"])
-    return out
+    sample_size = row["sample_size"] or 0
+    bet_count = row["bet_count"] or 0
+    hit_rate = row["hit_rate"]
+    ev = row["ev"]
+
+    if sample_size < MIN_SAMPLE or bet_count < MIN_SAMPLE or ev is None or hit_rate is None:
+        return
+
+    if ev < EV_PAUSE_TH and hit_rate < HIT_PAUSE_TH:
+        pause(f"EV_HIT_GUARD ev={ev} hit={hit_rate} window={WINDOW}")
+        return

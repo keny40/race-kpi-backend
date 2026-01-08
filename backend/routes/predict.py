@@ -1,88 +1,90 @@
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
-from datetime import datetime
-import sqlite3
-from pathlib import Path
+from fastapi import APIRouter, HTTPException, Query
+import random
 
-from backend.services.season import SeasonManager
-from backend.services.risk_guard import evaluate_and_maybe_pause
+from backend.services.db import get_conn
+from backend.services.risk_guard import (
+    PASS_THRESHOLD,
+    get_state,
+    on_pass,
+    on_run,
+    get_risk_multiplier,
+)
 
-DB_PATH = Path("races.db")
 router = APIRouter(prefix="/api", tags=["predict"])
 
-def _conn():
-    con = sqlite3.connect(DB_PATH)
-    con.row_factory = sqlite3.Row
-    return con
-
-class PredictRequest(BaseModel):
-    race_id: str
-    horses: list[dict] | None = None
-    meta: dict | None = None
 
 @router.post("/predict")
-def predict(req: PredictRequest):
-    ok, reason = SeasonManager.require_not_paused()
-    if not ok:
-        raise HTTPException(status_code=423, detail=f"paused: {reason}")
+def predict(race_id: str = Query(...)):
+    state = get_state()
 
-    race_id = req.race_id.strip()
-
-    features = {
-        "volatility": float((req.meta or {}).get("volatility", 0.10)),
-        "disagreement": float((req.meta or {}).get("disagreement", 0.10)),
-        "data_quality": float((req.meta or {}).get("data_quality", 0.90)),
-    }
-
-    guard = evaluate_and_maybe_pause(
-        race_id=race_id,
-        features=features,
-        meta={"source": "predict", "client_meta": req.meta or {}}
-    )
-
-    decision = "PASS"
-    confidence = 0.50
-
-    if guard["is_red"]:
-        decision = "PASS"
-        confidence = 0.10
-    else:
-        decision = "PICK"
-        confidence = 0.70
-
-    con = _conn()
-    cur = con.cursor()
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS predictions (
-            race_id TEXT PRIMARY KEY,
-            decision TEXT NOT NULL,
-            confidence REAL NOT NULL,
-            created_at TEXT NOT NULL,
-            red_score REAL NOT NULL,
-            red_threshold REAL NOT NULL,
-            red_reason TEXT NOT NULL
+    if state["paused"] == 1:
+        raise HTTPException(
+            status_code=503,
+            detail=f"PAUSED: {state['reason']}"
         )
-    """)
-    cur.execute("""
-        INSERT OR REPLACE INTO predictions
-        (race_id, decision, confidence, created_at, red_score, red_threshold, red_reason)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-    """, (
-        race_id,
-        decision,
-        float(confidence),
-        datetime.utcnow().isoformat(),
-        float(guard["score"]),
-        float(guard["threshold"]),
-        str(guard["reason"])
-    ))
-    con.commit()
-    con.close()
+
+    horse_no = random.randint(1, 14)
+    confidence = round(random.random(), 4)
+
+    conn = get_conn()
+
+    # PASS (confidence 기준)
+    if confidence < PASS_THRESHOLD:
+        conn.execute(
+            """
+            INSERT INTO predictions(race_id, predicted_horse_no, confidence, passed)
+            VALUES (?, ?, ?, 1)
+            """,
+            (race_id, horse_no, confidence),
+        )
+        conn.commit()
+        conn.close()
+        on_pass(confidence)
+
+        return {
+            "race_id": race_id,
+            "action": "PASS",
+            "confidence": confidence,
+        }
+
+    # RUN → RED 단계별 주문 정책
+    multiplier = get_risk_multiplier(state["red_streak"] + 1)
+
+    # FORCE PASS
+    if multiplier == 0.0:
+        conn.execute(
+            """
+            INSERT INTO predictions(race_id, predicted_horse_no, confidence, passed)
+            VALUES (?, ?, ?, 1)
+            """,
+            (race_id, horse_no, confidence),
+        )
+        conn.commit()
+        conn.close()
+
+        return {
+            "race_id": race_id,
+            "action": "FORCE_PASS",
+            "confidence": confidence,
+            "reason": "RED_LIMIT_REACHED",
+        }
+
+    # 정상 RUN
+    conn.execute(
+        """
+        INSERT INTO predictions(race_id, predicted_horse_no, confidence, passed)
+        VALUES (?, ?, ?, 0)
+        """,
+        (race_id, horse_no, confidence),
+    )
+    conn.commit()
+    conn.close()
+
+    on_run(confidence)
 
     return {
         "race_id": race_id,
-        "decision": decision,
+        "action": "RUN",
         "confidence": confidence,
-        "risk": guard,
-        "season": SeasonManager.get_status()
+        "order_multiplier": multiplier,
     }

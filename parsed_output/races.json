@@ -1,0 +1,1856 @@
+[
+  {
+    "race_id": "20260103_01",
+    "meta": {
+      "race_id": "20260103_01",
+      "race_date": "2026-01-03",
+      "track": "서울",
+      "race_no": 1,
+      "distance": 1200.0,
+      "grade": "국6",
+      "start_time": "10:35"
+    },
+    "horses": [
+      {
+        "race_id": "20260103_01",
+        "horse_no": 1,
+        "horse_name": "컴퍼스포스",
+        "origin": "한",
+        "sex": "암",
+        "age": 3,
+        "weight": 54.5,
+        "jockey": "정우주",
+        "trainer": "임채덕",
+        "owner": "이상진"
+      },
+      {
+        "race_id": "20260103_01",
+        "horse_no": 2,
+        "horse_name": "로드투퍼펙트",
+        "origin": "한",
+        "sex": "암",
+        "age": 3,
+        "weight": 54.5,
+        "jockey": "임다빈",
+        "trainer": "정호익",
+        "owner": "최종복"
+      },
+      {
+        "race_id": "20260103_01",
+        "horse_no": 3,
+        "horse_name": "선라이즈킹",
+        "origin": "한",
+        "sex": "거",
+        "age": 3,
+        "weight": 56.5,
+        "jockey": "송재철",
+        "trainer": "홍윤화",
+        "owner": "김은미"
+      },
+      {
+        "race_id": "20260103_01",
+        "horse_no": 8,
+        "horse_name": "라비타",
+        "origin": "한",
+        "sex": "암",
+        "age": 3,
+        "weight": 54.5,
+        "jockey": "최범현",
+        "trainer": "박지헌",
+        "owner": "죽마조합"
+      },
+      {
+        "race_id": "20260103_01",
+        "horse_no": 9,
+        "horse_name": "글로벌카드",
+        "origin": "한",
+        "sex": "수",
+        "age": 3,
+        "weight": 56.5,
+        "jockey": "장추열",
+        "trainer": "이준철",
+        "owner": "장재형"
+      }
+    ]
+  },
+  {
+    "race_id": "20260103_02",
+    "meta": {
+      "race_id": "20260103_02",
+      "race_date": "2026-01-03",
+      "track": "서울",
+      "race_no": 2,
+      "distance": 1200.0,
+      "grade": "국6",
+      "start_time": "11:00"
+    },
+    "horses": [
+      {
+        "race_id": "20260103_02",
+        "horse_no": 1,
+        "horse_name": "비케이데블",
+        "origin": "한",
+        "sex": "암",
+        "age": 3,
+        "weight": 54.5,
+        "jockey": "조한별",
+        "trainer": "조현수",
+        "owner": "함승원"
+      },
+      {
+        "race_id": "20260103_02",
+        "horse_no": 2,
+        "horse_name": "플레이스테이",
+        "origin": "한",
+        "sex": "수",
+        "age": 4,
+        "weight": 57.0,
+        "jockey": "송재철",
+        "trainer": "이동국",
+        "owner": "김창만"
+      },
+      {
+        "race_id": "20260103_02",
+        "horse_no": 3,
+        "horse_name": "우마루",
+        "origin": "한",
+        "sex": "암",
+        "age": 3,
+        "weight": 54.5,
+        "jockey": "오수철",
+        "trainer": "김윤섭",
+        "owner": "임흥호"
+      },
+      {
+        "race_id": "20260103_02",
+        "horse_no": 4,
+        "horse_name": "용비교",
+        "origin": "한",
+        "sex": "암",
+        "age": 3,
+        "weight": 54.5,
+        "jockey": "임기원",
+        "trainer": "구자흥",
+        "owner": "정성진"
+      },
+      {
+        "race_id": "20260103_02",
+        "horse_no": 5,
+        "horse_name": "엘피다",
+        "origin": "한",
+        "sex": "암",
+        "age": 3,
+        "weight": 54.5,
+        "jockey": "해리카심",
+        "trainer": "이관호",
+        "owner": "양은석"
+      },
+      {
+        "race_id": "20260103_02",
+        "horse_no": 8,
+        "horse_name": "캡마왕",
+        "origin": "한",
+        "sex": "수",
+        "age": 3,
+        "weight": 56.5,
+        "jockey": "유승완",
+        "trainer": "배휴준",
+        "owner": "하늬바람"
+      },
+      {
+        "race_id": "20260103_02",
+        "horse_no": 9,
+        "horse_name": "그레이스데이",
+        "origin": "한",
+        "sex": "수",
+        "age": 3,
+        "weight": 56.5,
+        "jockey": "정정희",
+        "trainer": "안병기",
+        "owner": "정현주"
+      },
+      {
+        "race_id": "20260103_02",
+        "horse_no": 10,
+        "horse_name": "학산태풍",
+        "origin": "한",
+        "sex": "암",
+        "age": 4,
+        "weight": 55.0,
+        "jockey": "이동하",
+        "trainer": "박병일",
+        "owner": "황봉기"
+      },
+      {
+        "race_id": "20260103_02",
+        "horse_no": 11,
+        "horse_name": "파라이바",
+        "origin": "한",
+        "sex": "암",
+        "age": 3,
+        "weight": 54.5,
+        "jockey": "임다빈",
+        "trainer": "정호익",
+        "owner": "배은정"
+      }
+    ]
+  },
+  {
+    "race_id": "20260103_03",
+    "meta": {
+      "race_id": "20260103_03",
+      "race_date": "2026-01-03",
+      "track": "서울",
+      "race_no": 3,
+      "distance": 1300.0,
+      "grade": "국6",
+      "start_time": "11:25"
+    },
+    "horses": [
+      {
+        "race_id": "20260103_03",
+        "horse_no": 1,
+        "horse_name": "스마트해성",
+        "origin": "한",
+        "sex": "암",
+        "age": 3,
+        "weight": 54.5,
+        "jockey": "최범현",
+        "trainer": "조현수",
+        "owner": "김조은"
+      },
+      {
+        "race_id": "20260103_03",
+        "horse_no": 2,
+        "horse_name": "비카드래곤",
+        "origin": "한",
+        "sex": "암",
+        "age": 4,
+        "weight": 55.0,
+        "jockey": "조한별",
+        "trainer": "임채덕",
+        "owner": "김형란"
+      },
+      {
+        "race_id": "20260103_03",
+        "horse_no": 3,
+        "horse_name": "라온사파이어",
+        "origin": "한",
+        "sex": "암",
+        "age": 3,
+        "weight": 54.5,
+        "jockey": "조상범",
+        "trainer": "박종곤",
+        "owner": "라온랜드"
+      },
+      {
+        "race_id": "20260103_03",
+        "horse_no": 4,
+        "horse_name": "위드도르티",
+        "origin": "한",
+        "sex": "암",
+        "age": 4,
+        "weight": 55.0,
+        "jockey": "조재로",
+        "trainer": "김동철",
+        "owner": "최상일"
+      },
+      {
+        "race_id": "20260103_03",
+        "horse_no": 5,
+        "horse_name": "대한시대",
+        "origin": "한",
+        "sex": "수",
+        "age": 3,
+        "weight": 56.5,
+        "jockey": "김용근",
+        "trainer": "강성오",
+        "owner": "이종수"
+      },
+      {
+        "race_id": "20260103_03",
+        "horse_no": 9,
+        "horse_name": "눈꽃",
+        "origin": "한",
+        "sex": "암",
+        "age": 3,
+        "weight": 54.5,
+        "jockey": "유승완",
+        "trainer": "심승태",
+        "owner": "김선식"
+      }
+    ]
+  },
+  {
+    "race_id": "20260103_04",
+    "meta": {
+      "race_id": "20260103_04",
+      "race_date": "2026-01-03",
+      "track": "서울",
+      "race_no": 4,
+      "distance": 1400.0,
+      "grade": "국6",
+      "start_time": "12:45"
+    },
+    "horses": [
+      {
+        "race_id": "20260103_04",
+        "horse_no": 1,
+        "horse_name": "검은숲",
+        "origin": "한",
+        "sex": "수",
+        "age": 3,
+        "weight": 56.5,
+        "jockey": "김용근",
+        "trainer": "강성오",
+        "owner": "박치문"
+      },
+      {
+        "race_id": "20260103_04",
+        "horse_no": 2,
+        "horse_name": "은하칼라스",
+        "origin": "한",
+        "sex": "암",
+        "age": 4,
+        "weight": 55.0,
+        "jockey": "빅투아르",
+        "trainer": "박윤규",
+        "owner": "오종환"
+      },
+      {
+        "race_id": "20260103_04",
+        "horse_no": 3,
+        "horse_name": "엠제이베트",
+        "origin": "한",
+        "sex": "암",
+        "age": 4,
+        "weight": 55.0,
+        "jockey": "김옥성",
+        "trainer": "김동균",
+        "owner": "박정재"
+      },
+      {
+        "race_id": "20260103_04",
+        "horse_no": 4,
+        "horse_name": "청룡기운",
+        "origin": "한",
+        "sex": "거",
+        "age": 4,
+        "weight": 57.0,
+        "jockey": "푸르칸",
+        "trainer": "최용건",
+        "owner": "박재범"
+      },
+      {
+        "race_id": "20260103_04",
+        "horse_no": 5,
+        "horse_name": "신천하트",
+        "origin": "한",
+        "sex": "암",
+        "age": 4,
+        "weight": 55.0,
+        "jockey": "문정균",
+        "trainer": "홍대유",
+        "owner": "문종원"
+      },
+      {
+        "race_id": "20260103_04",
+        "horse_no": 7,
+        "horse_name": "더블블레이드",
+        "origin": "한",
+        "sex": "암",
+        "age": 4,
+        "weight": 55.0,
+        "jockey": "조한별",
+        "trainer": "박천서",
+        "owner": "유성훈"
+      },
+      {
+        "race_id": "20260103_04",
+        "horse_no": 10,
+        "horse_name": "트리플팔메토",
+        "origin": "한",
+        "sex": "암",
+        "age": 4,
+        "weight": 55.0,
+        "jockey": "장추열",
+        "trainer": "김동균",
+        "owner": "박성구"
+      },
+      {
+        "race_id": "20260103_04",
+        "horse_no": 11,
+        "horse_name": "발키리",
+        "origin": "한",
+        "sex": "암",
+        "age": 4,
+        "weight": 55.0,
+        "jockey": "김태희",
+        "trainer": "박재우",
+        "owner": "김세권"
+      }
+    ]
+  },
+  {
+    "race_id": "20260103_05",
+    "meta": {
+      "race_id": "20260103_05",
+      "race_date": "2026-01-03",
+      "track": "서울",
+      "race_no": 5,
+      "distance": 1200.0,
+      "grade": "국5",
+      "start_time": "13:35"
+    },
+    "horses": [
+      {
+        "race_id": "20260103_05",
+        "horse_no": 1,
+        "horse_name": "라온파이널",
+        "origin": "한",
+        "sex": "암",
+        "age": 3,
+        "weight": 52.5,
+        "jockey": "조재로",
+        "trainer": "박종곤",
+        "owner": "손천수"
+      },
+      {
+        "race_id": "20260103_05",
+        "horse_no": 3,
+        "horse_name": "블랙스펙터",
+        "origin": "한",
+        "sex": "수",
+        "age": 5,
+        "weight": 55.5,
+        "jockey": "오수철",
+        "trainer": "배휴준",
+        "owner": "허영희"
+      },
+      {
+        "race_id": "20260103_05",
+        "horse_no": 5,
+        "horse_name": "크레이지망고",
+        "origin": "한",
+        "sex": "수",
+        "age": 4,
+        "weight": 53.5,
+        "jockey": "김태희",
+        "trainer": "신삼영",
+        "owner": "서창식"
+      },
+      {
+        "race_id": "20260103_05",
+        "horse_no": 6,
+        "horse_name": "굿프렌드",
+        "origin": "한",
+        "sex": "암",
+        "age": 4,
+        "weight": 52.5,
+        "jockey": "송재철",
+        "trainer": "안병기",
+        "owner": "말사모"
+      },
+      {
+        "race_id": "20260103_05",
+        "horse_no": 7,
+        "horse_name": "안양쓰나미",
+        "origin": "한",
+        "sex": "암",
+        "age": 5,
+        "weight": 52.5,
+        "jockey": "유승완",
+        "trainer": "김윤섭",
+        "owner": "이상진"
+      },
+      {
+        "race_id": "20260103_05",
+        "horse_no": 9,
+        "horse_name": "청산돌풍",
+        "origin": "한",
+        "sex": "수",
+        "age": 3,
+        "weight": 52.0,
+        "jockey": "임기원",
+        "trainer": "이관호",
+        "owner": "황은호"
+      },
+      {
+        "race_id": "20260103_05",
+        "horse_no": 11,
+        "horse_name": "용비신화",
+        "origin": "한",
+        "sex": "수",
+        "age": 3,
+        "weight": 53.5,
+        "jockey": "장추열",
+        "trainer": "홍대유",
+        "owner": "정성진"
+      }
+    ]
+  },
+  {
+    "race_id": "20260103_06",
+    "meta": {
+      "race_id": "20260103_06",
+      "race_date": "2026-01-03",
+      "track": "서울",
+      "race_no": 6,
+      "distance": 1700.0,
+      "grade": "국5",
+      "start_time": "14:25"
+    },
+    "horses": [
+      {
+        "race_id": "20260103_06",
+        "horse_no": 1,
+        "horse_name": "크리솔피스",
+        "origin": "한",
+        "sex": "수",
+        "age": 4,
+        "weight": 53.5,
+        "jockey": "유승완",
+        "trainer": "안병기",
+        "owner": "요시다"
+      },
+      {
+        "race_id": "20260103_06",
+        "horse_no": 2,
+        "horse_name": "이십년세월",
+        "origin": "한",
+        "sex": "수",
+        "age": 3,
+        "weight": 53.0,
+        "jockey": "이동하",
+        "trainer": "조현수",
+        "owner": "이혜란"
+      },
+      {
+        "race_id": "20260103_06",
+        "horse_no": 4,
+        "horse_name": "더엑설런트",
+        "origin": "한",
+        "sex": "수",
+        "age": 3,
+        "weight": 54.0,
+        "jockey": "조재로",
+        "trainer": "서인석",
+        "owner": "박준배"
+      },
+      {
+        "race_id": "20260103_06",
+        "horse_no": 6,
+        "horse_name": "금빛파워",
+        "origin": "한",
+        "sex": "거",
+        "age": 5,
+        "weight": 54.5,
+        "jockey": "해리카심",
+        "trainer": "배휴준",
+        "owner": "퍼플라인"
+      },
+      {
+        "race_id": "20260103_06",
+        "horse_no": 10,
+        "horse_name": "샤크텐",
+        "origin": "한",
+        "sex": "거",
+        "age": 5,
+        "weight": 53.5,
+        "jockey": "조상범",
+        "trainer": "박지헌",
+        "owner": "힐링팜조합"
+      },
+      {
+        "race_id": "20260103_06",
+        "horse_no": 11,
+        "horse_name": "소프트파워",
+        "origin": "한",
+        "sex": "암",
+        "age": 5,
+        "weight": 52.5,
+        "jockey": "이용호",
+        "trainer": "송문길",
+        "owner": "피닉스"
+      }
+    ]
+  },
+  {
+    "race_id": "20260103_07",
+    "meta": {
+      "race_id": "20260103_07",
+      "race_date": "2026-01-03",
+      "track": "서울",
+      "race_no": 7,
+      "distance": NaN,
+      "grade": null,
+      "start_time": null
+    },
+    "horses": [
+      {
+        "race_id": "20260103_07",
+        "horse_no": 2,
+        "horse_name": "블랙시대",
+        "origin": "한",
+        "sex": "수",
+        "age": 5,
+        "weight": 52.5,
+        "jockey": "김용근",
+        "trainer": "강성오",
+        "owner": "이강운"
+      },
+      {
+        "race_id": "20260103_07",
+        "horse_no": 5,
+        "horse_name": "시크릿왕자",
+        "origin": "한",
+        "sex": "거",
+        "age": 6,
+        "weight": 53.0,
+        "jockey": "김효정",
+        "trainer": "박윤규",
+        "owner": "최동근"
+      },
+      {
+        "race_id": "20260103_07",
+        "horse_no": 6,
+        "horse_name": "골드베르크",
+        "origin": "한",
+        "sex": "암",
+        "age": 5,
+        "weight": 52.5,
+        "jockey": "이용호",
+        "trainer": "송문길",
+        "owner": "이정화"
+      },
+      {
+        "race_id": "20260103_07",
+        "horse_no": 9,
+        "horse_name": "스터닝플래터",
+        "origin": "한",
+        "sex": "거",
+        "age": 5,
+        "weight": 55.5,
+        "jockey": "송재철",
+        "trainer": "김동균",
+        "owner": "박정배"
+      },
+      {
+        "race_id": "20260103_07",
+        "horse_no": 11,
+        "horse_name": "영원자이언트",
+        "origin": "한",
+        "sex": "수",
+        "age": 5,
+        "weight": 52.5,
+        "jockey": "루이스",
+        "trainer": "송문길",
+        "owner": "이종훈"
+      }
+    ]
+  },
+  {
+    "race_id": "20260103_08",
+    "meta": {
+      "race_id": "20260103_08",
+      "race_date": "2026-01-03",
+      "track": "서울",
+      "race_no": 8,
+      "distance": NaN,
+      "grade": null,
+      "start_time": null
+    },
+    "horses": [
+      {
+        "race_id": "20260103_08",
+        "horse_no": 1,
+        "horse_name": "간다고",
+        "origin": "한",
+        "sex": "암",
+        "age": 5,
+        "weight": 52.5,
+        "jockey": "김옥성",
+        "trainer": "전승규",
+        "owner": "퍼플라인"
+      },
+      {
+        "race_id": "20260103_08",
+        "horse_no": 10,
+        "horse_name": "손에손잡고",
+        "origin": "한",
+        "sex": "암",
+        "age": 5,
+        "weight": 54.0,
+        "jockey": "문정균",
+        "trainer": "홍대유",
+        "owner": "김종식"
+      }
+    ]
+  },
+  {
+    "race_id": "20260103_09",
+    "meta": {
+      "race_id": "20260103_09",
+      "race_date": "2026-01-03",
+      "track": "서울",
+      "race_no": 9,
+      "distance": 1400.0,
+      "grade": "국4",
+      "start_time": "16:55"
+    },
+    "horses": [
+      {
+        "race_id": "20260103_09",
+        "horse_no": 2,
+        "horse_name": "스파클링",
+        "origin": "한",
+        "sex": "거",
+        "age": 5,
+        "weight": 55.0,
+        "jockey": "김효정",
+        "trainer": "서홍수",
+        "owner": "조용학"
+      },
+      {
+        "race_id": "20260103_09",
+        "horse_no": 4,
+        "horse_name": "컴플리트스텝",
+        "origin": "한",
+        "sex": "암",
+        "age": 6,
+        "weight": 52.5,
+        "jockey": "조한별",
+        "trainer": "이신우",
+        "owner": "장석영"
+      },
+      {
+        "race_id": "20260103_09",
+        "horse_no": 5,
+        "horse_name": "치프스타",
+        "origin": "한",
+        "sex": "암",
+        "age": 3,
+        "weight": 55.5,
+        "jockey": "최범현",
+        "trainer": "문병기",
+        "owner": "김길리"
+      },
+      {
+        "race_id": "20260103_09",
+        "horse_no": 6,
+        "horse_name": "송암스카이",
+        "origin": "한",
+        "sex": "암",
+        "age": 5,
+        "weight": 54.0,
+        "jockey": "김옥성",
+        "trainer": "박병일",
+        "owner": "송암축산"
+      },
+      {
+        "race_id": "20260103_09",
+        "horse_no": 7,
+        "horse_name": "벌교차돌",
+        "origin": "한",
+        "sex": "암",
+        "age": 5,
+        "weight": 52.5,
+        "jockey": "루이스",
+        "trainer": "홍대유",
+        "owner": "유성훈"
+      },
+      {
+        "race_id": "20260103_09",
+        "horse_no": 8,
+        "horse_name": "사이클론스타",
+        "origin": "한",
+        "sex": "거",
+        "age": 5,
+        "weight": 54.0,
+        "jockey": "코지",
+        "trainer": "강환민",
+        "owner": "신승열"
+      },
+      {
+        "race_id": "20260103_09",
+        "horse_no": 9,
+        "horse_name": "비바청수",
+        "origin": "한",
+        "sex": "암",
+        "age": 5,
+        "weight": 52.0,
+        "jockey": "조상범",
+        "trainer": "박지헌",
+        "owner": "청수"
+      },
+      {
+        "race_id": "20260103_09",
+        "horse_no": 10,
+        "horse_name": "특급파티",
+        "origin": "한",
+        "sex": "암",
+        "age": 4,
+        "weight": 52.5,
+        "jockey": "조재로",
+        "trainer": "서인석",
+        "owner": "김근영"
+      }
+    ]
+  },
+  {
+    "race_id": "20260103_10",
+    "meta": {
+      "race_id": "20260103_10",
+      "race_date": "2026-01-03",
+      "track": "서울",
+      "race_no": 10,
+      "distance": NaN,
+      "grade": null,
+      "start_time": null
+    },
+    "horses": [
+      {
+        "race_id": "20260103_10",
+        "horse_no": 2,
+        "horse_name": "런와일드",
+        "origin": "한",
+        "sex": "거",
+        "age": 5,
+        "weight": 55.5,
+        "jockey": "장추열",
+        "trainer": "이관호",
+        "owner": "손병현"
+      },
+      {
+        "race_id": "20260103_10",
+        "horse_no": 6,
+        "horse_name": "대흥클래스",
+        "origin": "한",
+        "sex": "수",
+        "age": 6,
+        "weight": 54.0,
+        "jockey": "조재로",
+        "trainer": "최봉주",
+        "owner": "임한용"
+      }
+    ]
+  },
+  {
+    "race_id": "20260103_11",
+    "meta": {
+      "race_id": "20260103_11",
+      "race_date": "2026-01-03",
+      "track": "서울",
+      "race_no": 11,
+      "distance": NaN,
+      "grade": null,
+      "start_time": null
+    },
+    "horses": [
+      {
+        "race_id": "20260103_11",
+        "horse_no": 2,
+        "horse_name": "엠제이베스트",
+        "origin": "한",
+        "sex": "수",
+        "age": 8,
+        "weight": 54.5,
+        "jockey": "김효정",
+        "trainer": "문병기",
+        "owner": "박정재"
+      },
+      {
+        "race_id": "20260103_11",
+        "horse_no": 6,
+        "horse_name": "베스트레이스",
+        "origin": "한",
+        "sex": "수",
+        "age": 4,
+        "weight": 57.0,
+        "jockey": "최범현",
+        "trainer": "박지헌",
+        "owner": "죽마조합"
+      },
+      {
+        "race_id": "20260103_11",
+        "horse_no": 7,
+        "horse_name": "베트캡틴",
+        "origin": "한",
+        "sex": "수",
+        "age": 6,
+        "weight": 53.0,
+        "jockey": "루이스",
+        "trainer": "송문길",
+        "owner": "박정재"
+      },
+      {
+        "race_id": "20260103_11",
+        "horse_no": 8,
+        "horse_name": "실버레인",
+        "origin": "한",
+        "sex": "수",
+        "age": 4,
+        "weight": 58.0,
+        "jockey": "정정희",
+        "trainer": "안병기",
+        "owner": "조근식"
+      },
+      {
+        "race_id": "20260103_11",
+        "horse_no": 10,
+        "horse_name": "쏘아라스타",
+        "origin": "한",
+        "sex": "수",
+        "age": 4,
+        "weight": 54.0,
+        "jockey": "임다빈",
+        "trainer": "이관호",
+        "owner": "현태봉"
+      }
+    ]
+  },
+  {
+    "race_id": "20260104_01",
+    "meta": {
+      "race_id": "20260104_01",
+      "race_date": "2026-01-04",
+      "track": "서울",
+      "race_no": 1,
+      "distance": 1200.0,
+      "grade": "국6",
+      "start_time": "10:35"
+    },
+    "horses": [
+      {
+        "race_id": "20260104_01",
+        "horse_no": 1,
+        "horse_name": "강한프린세스",
+        "origin": "한",
+        "sex": "암",
+        "age": 3,
+        "weight": 54.5,
+        "jockey": "문정균",
+        "trainer": "홍대유",
+        "owner": "강수덕"
+      },
+      {
+        "race_id": "20260104_01",
+        "horse_no": 2,
+        "horse_name": "더선아미르",
+        "origin": "한",
+        "sex": "암",
+        "age": 3,
+        "weight": 54.5,
+        "jockey": "최범현",
+        "trainer": "조현수",
+        "owner": "한명로"
+      },
+      {
+        "race_id": "20260104_01",
+        "horse_no": 5,
+        "horse_name": "골든워리어",
+        "origin": "한",
+        "sex": "암",
+        "age": 3,
+        "weight": 54.5,
+        "jockey": "김태희",
+        "trainer": "서인석",
+        "owner": "홍상기"
+      },
+      {
+        "race_id": "20260104_01",
+        "horse_no": 8,
+        "horse_name": "다나은루비",
+        "origin": "한",
+        "sex": "암",
+        "age": 3,
+        "weight": 54.5,
+        "jockey": "송재철",
+        "trainer": "김동균",
+        "owner": "이진경"
+      },
+      {
+        "race_id": "20260104_01",
+        "horse_no": 9,
+        "horse_name": "라온더클라라",
+        "origin": "한",
+        "sex": "암",
+        "age": 3,
+        "weight": 54.5,
+        "jockey": "정우주",
+        "trainer": "박종곤",
+        "owner": "라온랜드"
+      },
+      {
+        "race_id": "20260104_01",
+        "horse_no": 10,
+        "horse_name": "선글라스",
+        "origin": "한",
+        "sex": "암",
+        "age": 3,
+        "weight": 54.5,
+        "jockey": "장추열",
+        "trainer": "서범석",
+        "owner": "초춘탁"
+      }
+    ]
+  },
+  {
+    "race_id": "20260104_02",
+    "meta": {
+      "race_id": "20260104_02",
+      "race_date": "2026-01-04",
+      "track": "서울",
+      "race_no": 2,
+      "distance": 1400.0,
+      "grade": "국6",
+      "start_time": "11:00"
+    },
+    "horses": [
+      {
+        "race_id": "20260104_02",
+        "horse_no": 1,
+        "horse_name": "키아오라",
+        "origin": "한",
+        "sex": "암",
+        "age": 4,
+        "weight": 55.0,
+        "jockey": "김태희",
+        "trainer": "성상현",
+        "owner": "박재용"
+      },
+      {
+        "race_id": "20260104_02",
+        "horse_no": 4,
+        "horse_name": "베스트프리덤",
+        "origin": "한",
+        "sex": "수",
+        "age": 3,
+        "weight": 56.5,
+        "jockey": "루이스",
+        "trainer": "박재우",
+        "owner": "박민지"
+      },
+      {
+        "race_id": "20260104_02",
+        "horse_no": 5,
+        "horse_name": "크리솔포시",
+        "origin": "한",
+        "sex": "암",
+        "age": 5,
+        "weight": 55.0,
+        "jockey": "송재철",
+        "trainer": "전승규",
+        "owner": "요시다"
+      },
+      {
+        "race_id": "20260104_02",
+        "horse_no": 7,
+        "horse_name": "달빛소나타",
+        "origin": "한",
+        "sex": "암",
+        "age": 4,
+        "weight": 55.0,
+        "jockey": "이용호",
+        "trainer": "신삼영",
+        "owner": "피닉스"
+      },
+      {
+        "race_id": "20260104_02",
+        "horse_no": 8,
+        "horse_name": "운주프린스",
+        "origin": "한",
+        "sex": "수",
+        "age": 3,
+        "weight": 56.5,
+        "jockey": "김용근",
+        "trainer": "김동균",
+        "owner": "부수선"
+      },
+      {
+        "race_id": "20260104_02",
+        "horse_no": 9,
+        "horse_name": "퍼펙트게임",
+        "origin": "한",
+        "sex": "수",
+        "age": 4,
+        "weight": 57.0,
+        "jockey": "빅투아르",
+        "trainer": "박지헌",
+        "owner": "김정성"
+      },
+      {
+        "race_id": "20260104_02",
+        "horse_no": 10,
+        "horse_name": "레드동백",
+        "origin": "한",
+        "sex": "암",
+        "age": 3,
+        "weight": 54.5,
+        "jockey": "푸르칸",
+        "trainer": "박윤규",
+        "owner": "이방훈"
+      }
+    ]
+  },
+  {
+    "race_id": "20260104_03",
+    "meta": {
+      "race_id": "20260104_03",
+      "race_date": "2026-01-04",
+      "track": "서울",
+      "race_no": 3,
+      "distance": 1400.0,
+      "grade": "국5",
+      "start_time": "12:05"
+    },
+    "horses": [
+      {
+        "race_id": "20260104_03",
+        "horse_no": 1,
+        "horse_name": "브리도킹스타",
+        "origin": "한",
+        "sex": "거",
+        "age": 5,
+        "weight": 52.0,
+        "jockey": "루이스",
+        "trainer": "정하백",
+        "owner": "조수영"
+      },
+      {
+        "race_id": "20260104_03",
+        "horse_no": 3,
+        "horse_name": "엑스팩터",
+        "origin": "한",
+        "sex": "거",
+        "age": 5,
+        "weight": 54.0,
+        "jockey": "김옥성",
+        "trainer": "김동균",
+        "owner": "공이공팔"
+      },
+      {
+        "race_id": "20260104_03",
+        "horse_no": 4,
+        "horse_name": "학산프린스",
+        "origin": "한",
+        "sex": "수",
+        "age": 4,
+        "weight": 56.5,
+        "jockey": "이동하",
+        "trainer": "안병기",
+        "owner": "황봉기"
+      },
+      {
+        "race_id": "20260104_03",
+        "horse_no": 5,
+        "horse_name": "엘리트피스",
+        "origin": "한",
+        "sex": "거",
+        "age": 5,
+        "weight": 53.5,
+        "jockey": "조한별",
+        "trainer": "신삼영",
+        "owner": "태희종합건설"
+      },
+      {
+        "race_id": "20260104_03",
+        "horse_no": 6,
+        "horse_name": "슬링스타",
+        "origin": "한",
+        "sex": "거",
+        "age": 4,
+        "weight": 54.5,
+        "jockey": "장추열",
+        "trainer": "김동균",
+        "owner": "강현철"
+      },
+      {
+        "race_id": "20260104_03",
+        "horse_no": 7,
+        "horse_name": "마스터콰이곤",
+        "origin": "한",
+        "sex": "수",
+        "age": 4,
+        "weight": 54.5,
+        "jockey": "정정희",
+        "trainer": "리카디",
+        "owner": "이호열"
+      },
+      {
+        "race_id": "20260104_03",
+        "horse_no": 8,
+        "horse_name": "동키플레이",
+        "origin": "한",
+        "sex": "암",
+        "age": 5,
+        "weight": 53.0,
+        "jockey": "조재로",
+        "trainer": "최영주",
+        "owner": "조현영"
+      },
+      {
+        "race_id": "20260104_03",
+        "horse_no": 9,
+        "horse_name": "지플렉스",
+        "origin": "한",
+        "sex": "수",
+        "age": 3,
+        "weight": 53.5,
+        "jockey": "김태희",
+        "trainer": "박윤규",
+        "owner": "최동근"
+      },
+      {
+        "race_id": "20260104_03",
+        "horse_no": 10,
+        "horse_name": "이클립스더퀸",
+        "origin": "한",
+        "sex": "암",
+        "age": 4,
+        "weight": 52.0,
+        "jockey": "송재철",
+        "trainer": "강성오",
+        "owner": "조한수"
+      }
+    ]
+  },
+  {
+    "race_id": "20260104_04",
+    "meta": {
+      "race_id": "20260104_04",
+      "race_date": "2026-01-04",
+      "track": "서울",
+      "race_no": 4,
+      "distance": 1300.0,
+      "grade": "국5",
+      "start_time": "13:10"
+    },
+    "horses": [
+      {
+        "race_id": "20260104_04",
+        "horse_no": 1,
+        "horse_name": "머스킷클리버",
+        "origin": "한",
+        "sex": "수",
+        "age": 3,
+        "weight": 55.5,
+        "jockey": "최범현",
+        "trainer": "박지헌",
+        "owner": "박남성"
+      },
+      {
+        "race_id": "20260104_04",
+        "horse_no": 4,
+        "horse_name": "마이티샤인",
+        "origin": "한",
+        "sex": "암",
+        "age": 3,
+        "weight": 52.5,
+        "jockey": "이동하",
+        "trainer": "서홍수",
+        "owner": "조제형"
+      },
+      {
+        "race_id": "20260104_04",
+        "horse_no": 5,
+        "horse_name": "섬싱다크",
+        "origin": "한",
+        "sex": "수",
+        "age": 4,
+        "weight": 53.0,
+        "jockey": "김옥성",
+        "trainer": "홍대유",
+        "owner": "정춘복"
+      },
+      {
+        "race_id": "20260104_04",
+        "horse_no": 6,
+        "horse_name": "음성파워",
+        "origin": "한",
+        "sex": "거",
+        "age": 5,
+        "weight": 55.0,
+        "jockey": "루이스",
+        "trainer": "함완식",
+        "owner": "씨유네트워크"
+      },
+      {
+        "race_id": "20260104_04",
+        "horse_no": 7,
+        "horse_name": "올포유어드림",
+        "origin": "한",
+        "sex": "수",
+        "age": 7,
+        "weight": 54.5,
+        "jockey": "김태희",
+        "trainer": "신삼영",
+        "owner": "서창식"
+      },
+      {
+        "race_id": "20260104_04",
+        "horse_no": 8,
+        "horse_name": "선캐처",
+        "origin": "한",
+        "sex": "암",
+        "age": 4,
+        "weight": 52.5,
+        "jockey": "정정희",
+        "trainer": "홍윤화",
+        "owner": "우상균"
+      },
+      {
+        "race_id": "20260104_04",
+        "horse_no": 9,
+        "horse_name": "금아포모스트",
+        "origin": "한",
+        "sex": "거",
+        "age": 4,
+        "weight": 56.0,
+        "jockey": "조재로",
+        "trainer": "이관호",
+        "owner": "금아산업"
+      },
+      {
+        "race_id": "20260104_04",
+        "horse_no": 10,
+        "horse_name": "해맞이",
+        "origin": "한",
+        "sex": "암",
+        "age": 4,
+        "weight": 52.5,
+        "jockey": "임다빈",
+        "trainer": "최봉주",
+        "owner": "박태준"
+      },
+      {
+        "race_id": "20260104_04",
+        "horse_no": 11,
+        "horse_name": "레인스타",
+        "origin": "한",
+        "sex": "암",
+        "age": 5,
+        "weight": 53.5,
+        "jockey": "유승완",
+        "trainer": "심승태",
+        "owner": "김선식"
+      }
+    ]
+  },
+  {
+    "race_id": "20260104_05",
+    "meta": {
+      "race_id": "20260104_05",
+      "race_date": "2026-01-04",
+      "track": "서울",
+      "race_no": 5,
+      "distance": 1200.0,
+      "grade": "국5",
+      "start_time": "14:00"
+    },
+    "horses": [
+      {
+        "race_id": "20260104_05",
+        "horse_no": 1,
+        "horse_name": "문학파이터",
+        "origin": "한",
+        "sex": "암",
+        "age": 4,
+        "weight": 53.5,
+        "jockey": "임다빈",
+        "trainer": "정호익",
+        "owner": "권경자"
+      },
+      {
+        "race_id": "20260104_05",
+        "horse_no": 2,
+        "horse_name": "스위트송",
+        "origin": "한",
+        "sex": "암",
+        "age": 4,
+        "weight": 52.5,
+        "jockey": "김효정",
+        "trainer": "강성오",
+        "owner": "김정철"
+      },
+      {
+        "race_id": "20260104_05",
+        "horse_no": 4,
+        "horse_name": "위너글로리",
+        "origin": "한",
+        "sex": "암",
+        "age": 4,
+        "weight": 53.5,
+        "jockey": "오수철",
+        "trainer": "김윤섭",
+        "owner": "간용기"
+      },
+      {
+        "race_id": "20260104_05",
+        "horse_no": 5,
+        "horse_name": "엑설런트한센",
+        "origin": "한",
+        "sex": "암",
+        "age": 4,
+        "weight": 52.5,
+        "jockey": "문정균",
+        "trainer": "김동균",
+        "owner": "박정배"
+      },
+      {
+        "race_id": "20260104_05",
+        "horse_no": 6,
+        "horse_name": "혜원용마",
+        "origin": "한",
+        "sex": "암",
+        "age": 5,
+        "weight": 52.5,
+        "jockey": "김용근",
+        "trainer": "서인석",
+        "owner": "이혜섭"
+      },
+      {
+        "race_id": "20260104_05",
+        "horse_no": 7,
+        "horse_name": "크로마이트",
+        "origin": "한",
+        "sex": "거",
+        "age": 6,
+        "weight": 54.0,
+        "jockey": "최범현",
+        "trainer": "전승규",
+        "owner": "박기태"
+      },
+      {
+        "race_id": "20260104_05",
+        "horse_no": 8,
+        "horse_name": "베스트드림",
+        "origin": "한",
+        "sex": "암",
+        "age": 4,
+        "weight": 52.5,
+        "jockey": "송재철",
+        "trainer": "이관호",
+        "owner": "베스트샤인조합"
+      },
+      {
+        "race_id": "20260104_05",
+        "horse_no": 9,
+        "horse_name": "라온스나이퍼",
+        "origin": "한",
+        "sex": "암",
+        "age": 3,
+        "weight": 52.0,
+        "jockey": "이동하",
+        "trainer": "박종곤",
+        "owner": "손천수"
+      },
+      {
+        "race_id": "20260104_05",
+        "horse_no": 10,
+        "horse_name": "예스마담",
+        "origin": "한",
+        "sex": "암",
+        "age": 4,
+        "weight": 51.0,
+        "jockey": "김태희",
+        "trainer": "박재우",
+        "owner": "조창규"
+      },
+      {
+        "race_id": "20260104_05",
+        "horse_no": 11,
+        "horse_name": "보스토크",
+        "origin": "한",
+        "sex": "암",
+        "age": 4,
+        "weight": 52.0,
+        "jockey": "해리카심",
+        "trainer": "박윤규",
+        "owner": "용치우"
+      }
+    ]
+  },
+  {
+    "race_id": "20260104_06",
+    "meta": {
+      "race_id": "20260104_06",
+      "race_date": "2026-01-04",
+      "track": "서울",
+      "race_no": 6,
+      "distance": 1700.0,
+      "grade": "국4",
+      "start_time": "14:50"
+    },
+    "horses": [
+      {
+        "race_id": "20260104_06",
+        "horse_no": 3,
+        "horse_name": "그로우",
+        "origin": "한",
+        "sex": "암",
+        "age": 6,
+        "weight": 52.5,
+        "jockey": "문정균",
+        "trainer": "김동균",
+        "owner": "배석두"
+      },
+      {
+        "race_id": "20260104_06",
+        "horse_no": 4,
+        "horse_name": "칸맥스",
+        "origin": "한",
+        "sex": "거",
+        "age": 4,
+        "weight": 56.5,
+        "jockey": "김용근",
+        "trainer": "서인석",
+        "owner": "배영한"
+      },
+      {
+        "race_id": "20260104_06",
+        "horse_no": 5,
+        "horse_name": "파워에치드",
+        "origin": "한",
+        "sex": "거",
+        "age": 6,
+        "weight": 55.5,
+        "jockey": "김옥성",
+        "trainer": "심승태",
+        "owner": "박정재"
+      },
+      {
+        "race_id": "20260104_06",
+        "horse_no": 6,
+        "horse_name": "파인핑크",
+        "origin": "한",
+        "sex": "암",
+        "age": 4,
+        "weight": 54.5,
+        "jockey": "이동하",
+        "trainer": "전승규",
+        "owner": "파인트리"
+      },
+      {
+        "race_id": "20260104_06",
+        "horse_no": 7,
+        "horse_name": "백룡",
+        "origin": "한",
+        "sex": "수",
+        "age": 5,
+        "weight": 53.0,
+        "jockey": "조상범",
+        "trainer": "최영주",
+        "owner": "최홍일"
+      },
+      {
+        "race_id": "20260104_06",
+        "horse_no": 8,
+        "horse_name": "무제한급",
+        "origin": "한",
+        "sex": "수",
+        "age": 3,
+        "weight": 53.5,
+        "jockey": "빅투아르",
+        "trainer": "문병기",
+        "owner": "남석우"
+      },
+      {
+        "race_id": "20260104_06",
+        "horse_no": 9,
+        "horse_name": "비케이러브",
+        "origin": "한",
+        "sex": "암",
+        "age": 4,
+        "weight": 52.5,
+        "jockey": "조한별",
+        "trainer": "조현수",
+        "owner": "함승원"
+      },
+      {
+        "race_id": "20260104_06",
+        "horse_no": 10,
+        "horse_name": "캠프데이비드",
+        "origin": "한",
+        "sex": "거",
+        "age": 5,
+        "weight": 55.0,
+        "jockey": "푸르칸",
+        "trainer": "강환민",
+        "owner": "배은정"
+      },
+      {
+        "race_id": "20260104_06",
+        "horse_no": 11,
+        "horse_name": "월드조이",
+        "origin": "한",
+        "sex": "수",
+        "age": 4,
+        "weight": 53.5,
+        "jockey": "임다빈",
+        "trainer": "홍대유",
+        "owner": "송태형"
+      }
+    ]
+  },
+  {
+    "race_id": "20260104_07",
+    "meta": {
+      "race_id": "20260104_07",
+      "race_date": "2026-01-04",
+      "track": "서울",
+      "race_no": 7,
+      "distance": 1800.0,
+      "grade": "국3",
+      "start_time": "15:40"
+    },
+    "horses": [
+      {
+        "race_id": "20260104_07",
+        "horse_no": 2,
+        "horse_name": "플라잉데이",
+        "origin": "한",
+        "sex": "암",
+        "age": 4,
+        "weight": 55.5,
+        "jockey": "김용근",
+        "trainer": "이준철",
+        "owner": "김형순"
+      },
+      {
+        "race_id": "20260104_07",
+        "horse_no": 4,
+        "horse_name": "홀리데이참",
+        "origin": "한",
+        "sex": "거",
+        "age": 8,
+        "weight": 54.5,
+        "jockey": "조상범",
+        "trainer": "최봉주",
+        "owner": "투애니포"
+      },
+      {
+        "race_id": "20260104_07",
+        "horse_no": 5,
+        "horse_name": "베스트토르",
+        "origin": "한",
+        "sex": "거",
+        "age": 5,
+        "weight": 52.0,
+        "jockey": "송재철",
+        "trainer": "박천서",
+        "owner": "베스트샤인조합"
+      },
+      {
+        "race_id": "20260104_07",
+        "horse_no": 6,
+        "horse_name": "리멤버어게인",
+        "origin": "한",
+        "sex": "거",
+        "age": 4,
+        "weight": 57.0,
+        "jockey": "루이스",
+        "trainer": "최용구",
+        "owner": "강홍수"
+      },
+      {
+        "race_id": "20260104_07",
+        "horse_no": 8,
+        "horse_name": "라이징모",
+        "origin": "한",
+        "sex": "암",
+        "age": 4,
+        "weight": 52.5,
+        "jockey": "조재로",
+        "trainer": "서인석",
+        "owner": "양현모"
+      },
+      {
+        "race_id": "20260104_07",
+        "horse_no": 9,
+        "horse_name": "컴플리트리더",
+        "origin": "한",
+        "sex": "거",
+        "age": 6,
+        "weight": 55.0,
+        "jockey": "조한별",
+        "trainer": "강환민",
+        "owner": "장석영"
+      },
+      {
+        "race_id": "20260104_07",
+        "horse_no": 10,
+        "horse_name": "골드뭉치",
+        "origin": "한",
+        "sex": "거",
+        "age": 5,
+        "weight": 52.5,
+        "jockey": "정정희",
+        "trainer": "리카디",
+        "owner": "이기선"
+      }
+    ]
+  },
+  {
+    "race_id": "20260104_08",
+    "meta": {
+      "race_id": "20260104_08",
+      "race_date": "2026-01-04",
+      "track": "서울",
+      "race_no": 8,
+      "distance": NaN,
+      "grade": null,
+      "start_time": null
+    },
+    "horses": [
+      {
+        "race_id": "20260104_08",
+        "horse_no": 2,
+        "horse_name": "용암세상",
+        "origin": "한",
+        "sex": "거",
+        "age": 5,
+        "weight": 52.5,
+        "jockey": "조재로",
+        "trainer": "배휴준",
+        "owner": "김학록"
+      },
+      {
+        "race_id": "20260104_08",
+        "horse_no": 3,
+        "horse_name": "거센반격",
+        "origin": "한",
+        "sex": "수",
+        "age": 5,
+        "weight": 52.5,
+        "jockey": "송재철",
+        "trainer": "이관호",
+        "owner": "강석대"
+      },
+      {
+        "race_id": "20260104_08",
+        "horse_no": 8,
+        "horse_name": "컴플리트밸류",
+        "origin": "한",
+        "sex": "수",
+        "age": 7,
+        "weight": 57.0,
+        "jockey": "임기원",
+        "trainer": "강환민",
+        "owner": "장석영"
+      },
+      {
+        "race_id": "20260104_08",
+        "horse_no": 9,
+        "horse_name": "승부사",
+        "origin": "한",
+        "sex": "수",
+        "age": 7,
+        "weight": 52.5,
+        "jockey": "조상범",
+        "trainer": "배휴준",
+        "owner": "박재범"
+      },
+      {
+        "race_id": "20260104_08",
+        "horse_no": 10,
+        "horse_name": "마이센터",
+        "origin": "한",
+        "sex": "수",
+        "age": 5,
+        "weight": 52.5,
+        "jockey": "임다빈",
+        "trainer": "정호익",
+        "owner": "백국인"
+      }
+    ]
+  },
+  {
+    "race_id": "20260104_09",
+    "meta": {
+      "race_id": "20260104_09",
+      "race_date": "2026-01-04",
+      "track": "서울",
+      "race_no": 9,
+      "distance": NaN,
+      "grade": null,
+      "start_time": null
+    },
+    "horses": [
+      {
+        "race_id": "20260104_09",
+        "horse_no": 3,
+        "horse_name": "마니노다지",
+        "origin": "한",
+        "sex": "거",
+        "age": 4,
+        "weight": 54.5,
+        "jockey": "장추열",
+        "trainer": "최봉주",
+        "owner": "한영석"
+      },
+      {
+        "race_id": "20260104_09",
+        "horse_no": 4,
+        "horse_name": "제라퀸",
+        "origin": "한",
+        "sex": "암",
+        "age": 5,
+        "weight": 52.5,
+        "jockey": "김용근",
+        "trainer": "김동철",
+        "owner": "하늬바람"
+      },
+      {
+        "race_id": "20260104_09",
+        "horse_no": 8,
+        "horse_name": "천행챗",
+        "origin": "한",
+        "sex": "암",
+        "age": 5,
+        "weight": 53.0,
+        "jockey": "조상범",
+        "trainer": "배휴준",
+        "owner": "조금제"
+      }
+    ]
+  },
+  {
+    "race_id": "20260104_10",
+    "meta": {
+      "race_id": "20260104_10",
+      "race_date": "2026-01-04",
+      "track": "서울",
+      "race_no": 10,
+      "distance": NaN,
+      "grade": null,
+      "start_time": null
+    },
+    "horses": [
+      {
+        "race_id": "20260104_10",
+        "horse_no": 2,
+        "horse_name": "디아나",
+        "origin": "한",
+        "sex": "암",
+        "age": 5,
+        "weight": 53.5,
+        "jockey": "코지",
+        "trainer": "토니",
+        "owner": "이한준"
+      },
+      {
+        "race_id": "20260104_10",
+        "horse_no": 11,
+        "horse_name": "카우보이탱고",
+        "origin": "한",
+        "sex": "거",
+        "age": 8,
+        "weight": 58.0,
+        "jockey": "문정균",
+        "trainer": "최봉주",
+        "owner": "임동현"
+      }
+    ]
+  }
+]

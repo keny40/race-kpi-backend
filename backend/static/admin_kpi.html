@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <title>KPI Strategy Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { margin:0; background:#0b0f16; color:#e8eefc; font-family:system-ui; }
+    .wrap { max-width:1100px; margin:0 auto; padding:20px; }
+    h1 { margin:0 0 14px 0; }
+    .ctrl { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
+    input { background:#0e1524; border:1px solid #24314a; color:#e8eefc; padding:10px 12px; border-radius:10px; min-width:220px; }
+    button { background:#1b2a44; border:1px solid #2a3a58; color:#e8eefc; padding:10px 12px; border-radius:10px; cursor:pointer; font-weight:600; }
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    .card { background:#121a28; border:1px solid #1e2a40; border-radius:14px; padding:14px; }
+    table { width:100%; border-collapse:collapse; font-size:12px; }
+    th, td { border-bottom:1px solid #1e2a40; padding:6px; text-align:right; }
+    th:first-child, td:first-child { text-align:left; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Strategy KPI</h1>
+
+  <div class="ctrl">
+    <input id="token" type="password" placeholder="ADMIN_PASSWORD" />
+    <input id="limit" type="number" value="100" min="20" max="500" />
+    <button id="btnLoad">LOAD</button>
+  </div>
+
+  <div class="grid">
+    <div class="card"><canvas id="hitChart"></canvas></div>
+    <div class="card"><canvas id="roiChart"></canvas></div>
+  </div>
+
+  <div class="card" style="margin-top:14px">
+    <h3>Summary</h3>
+    <table id="summary"></table>
+  </div>
+</div>
+
+<script>
+let hitChart, roiChart;
+
+function color(i){
+  const cs=["#4e79a7","#f28e2b","#e15759","#76b7b2","#59a14f","#edc948","#b07aa1"];
+  return cs[i%cs.length];
+}
+
+async function loadKPI(){
+  const token=document.getElementById("token").value.trim();
+  const limit=document.getElementById("limit").value;
+  if(!token) return;
+
+  const r=await fetch(`/api/admin/kpi/strategy?limit=${limit}`,{
+    headers:{ "x-admin-token":token }
+  });
+  const j=await r.json();
+
+  const labels=[...new Set(Object.values(j.series).flat().map(x=>x.t))];
+
+  const hitDatasets=[], roiDatasets=[];
+  let i=0;
+  for(const [k,v] of Object.entries(j.series)){
+    let cum=0;
+    hitDatasets.push({
+      label:k,
+      data:v.map(x=>{ cum+=x.hit; return cum; }),
+      borderColor:color(i),
+      fill:false
+    });
+    roiDatasets.push({
+      label:k,
+      data:v.map(x=>x.roi),
+      borderColor:color(i),
+      fill:false
+    });
+    i++;
+  }
+
+  if(hitChart) hitChart.destroy();
+  if(roiChart) roiChart.destroy();
+
+  hitChart=new Chart(document.getElementById("hitChart"),{
+    type:"line",
+    data:{ labels, datasets:hitDatasets },
+    options:{ plugins:{ title:{display:true,text:"Hit (Cumulative)"} } }
+  });
+
+  roiChart=new Chart(document.getElementById("roiChart"),{
+    type:"line",
+    data:{ labels, datasets:roiDatasets },
+    options:{ plugins:{ title:{display:true,text:"ROI"} } }
+  });
+
+  const tbl=document.getElementById("summary");
+  tbl.innerHTML="<tr><th>Strategy</th><th>Count</th><th>HitRate</th><th>AvgROI</th></tr>";
+  j.summary.forEach(s=>{
+    tbl.innerHTML+=`<tr>
+      <td>${s.strategy}</td>
+      <td>${s.count}</td>
+      <td>${s.hit_rate}</td>
+      <td>${s.avg_roi}</td>
+    </tr>`;
+  });
+}
+
+document.getElementById("btnLoad").onclick=loadKPI;
+</script>
+</body>
+</html>

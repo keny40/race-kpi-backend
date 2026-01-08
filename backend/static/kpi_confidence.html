@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>confidence 히스토그램 + 적중률</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .barWrap { background:#eee; width: 420px; height: 16px; }
+    .bar { height: 16px; background:#2196f3; }
+    table { border-collapse: collapse; margin-top: 10px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+    th { background:#f2f2f2; }
+    .small { font-size: 12px; color:#555; margin-top: 6px; }
+  </style>
+</head>
+<body>
+
+<h2>confidence 히스토그램 + 적중률</h2>
+<div class="small">구간별 PLAY 수/적중 수/적중률을 보여줍니다</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>구간</th>
+      <th>PLAY</th>
+      <th>HIT</th>
+      <th>HIT RATE</th>
+      <th>분포</th>
+    </tr>
+  </thead>
+  <tbody id="rows"></tbody>
+</table>
+
+<script>
+async function load() {
+  const res = await fetch("/api/admin/stats/confidence_bins");
+  if (!res.ok) {
+    document.getElementById("rows").innerHTML = `<tr><td colspan="5">데이터 없음</td></tr>`;
+    return;
+  }
+  const data = await res.json();
+  const bins = data.bins || [];
+  const total = bins.reduce((a,b)=>a+(b.play||0),0) || 1;
+
+  const tbody = document.getElementById("rows");
+  tbody.innerHTML = "";
+
+  bins.forEach(b => {
+    const play = b.play || 0;
+    const hit = b.hit || 0;
+    const rate = play ? (hit/play) : 0;
+    const w = Math.round((play/total)*420);
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${b.label}</td>
+      <td>${play}</td>
+      <td>${hit}</td>
+      <td>${(rate*100).toFixed(1)}%</td>
+      <td>
+        <div class="barWrap">
+          <div class="bar" style="width:${w}px"></div>
+        </div>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+load();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin Dashboard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    h2 {
+      margin-top: 0;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-top: 10px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 6px 8px;
+      text-align: center;
+    }
+    th {
+      background: #f2f2f2;
+    }
+    tr:hover {
+      background: #fafafa;
+      cursor: pointer;
+    }
+    .pass {
+      color: red;
+      font-weight: bold;
+    }
+    .run {
+      color: green;
+      font-weight: bold;
+    }
+    #guard-box {
+      border: 2px solid #333;
+      padding: 12px;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<h2>관리자 대시보드</h2>
+
+<!-- 자동 중단 상태 -->
+<div id="guard-box">
+  <b>자동 중단 상태</b>
+  <div id="guard-status">로딩중...</div>
+</div>
+
+<!-- 경주 목록 -->
+<h3>최근 경주 목록</h3>
+<table id="race-table">
+  <thead>
+    <tr>
+      <th>race_id</th>
+      <th>run_at</th>
+      <th>decision</th>
+      <th>confidence</th>
+      <th>pre_ev</th>
+      <th>live_ev</th>
+      <th>hit_miss</th>
+      <th>상태</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<!-- 상세 -->
+<h3>경주 상세</h3>
+<pre id="detail-box">경주를 선택하세요</pre>
+
+<script>
+async function loadGuardStatus() {
+  const res = await fetch("/api/admin/guard/status");
+  const data = await res.json();
+
+  const el = document.getElementById("guard-status");
+
+  if (data.forced === 1) {
+    el.innerHTML = `
+      <span class="pass">AUTO PASS</span><br>
+      사유: ${data.reason}<br>
+      avg_ev: ${data.avg_ev}<br>
+      hit_rate: ${data.hit_rate}
+    `;
+  } else {
+    el.innerHTML = `
+      <span class="run">RUN</span><br>
+      avg_ev: ${data.avg_ev}<br>
+      hit_rate: ${data.hit_rate}
+    `;
+  }
+}
+
+async function loadRaceList() {
+  const res = await fetch("/api/admin/pre-race/list");
+  const data = await res.json();
+
+  const tbody = document.querySelector("#race-table tbody");
+  tbody.innerHTML = "";
+
+  data.forEach(r => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${r.race_id}</td>
+      <td>${r.run_at}</td>
+      <td>${r.decision ?? "-"}</td>
+      <td>${r.confidence ?? "-"}</td>
+      <td>${r.pre_ev ?? "-"}</td>
+      <td>${r.live_ev ?? "-"}</td>
+      <td>${r.hit_miss ?? "-"}</td>
+      <td>${r.forced_pass === 1 ? "PASS" : "RUN"}</td>
+    `;
+    tr.onclick = () => loadRaceDetail(r.race_id);
+    tbody.appendChild(tr);
+  });
+}
+
+async function loadRaceDetail(raceId) {
+  const res = await fetch(`/api/admin/pre-race/detail?race_id=${raceId}`);
+  const data = await res.json();
+
+  document.getElementById("detail-box").textContent =
+    JSON.stringify(data, null, 2);
+}
+
+loadGuardStatus();
+loadRaceList();
+
+setInterval(loadGuardStatus, 5000);
+setInterval(loadRaceList, 10000);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Pre-Race Scheduler Admin</title>
+</head>
+<body>
+  <h2>Pre-Race Scheduler</h2>
+
+  <div id="status">loading...</div>
+
+  <button onclick="start()">START</button>
+  <button onclick="stop()">STOP</button>
+
+  <script>
+    const TOKEN = prompt("ADMIN TOKEN");
+
+    async function api(path, method="GET") {
+      const res = await fetch(path, {
+        method,
+        headers: { "x-admin-token": TOKEN }
+      });
+      return res.json();
+    }
+
+    async function refresh() {
+      const s = await api("/api/admin/scheduler/status");
+      document.getElementById("status").innerText =
+        `running: ${s.running}, last_run: ${s.last_run}`;
+    }
+
+    async function start() {
+      await api("/api/admin/scheduler/start", "POST");
+      refresh();
+    }
+
+    async function stop() {
+      await api("/api/admin/scheduler/stop", "POST");
+      refresh();
+    }
+
+    refresh();
+    setInterval(refresh, 3000);
+  </script>
+</body>
+</html>

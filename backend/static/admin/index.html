@@ -1,30 +1,55 @@
-<!doctype html>
-<html lang="ko">
+<!DOCTYPE html>
+<html>
 <head>
   <meta charset="utf-8" />
-  <title>Predict Test</title>
+  <title>Admin Risk Monitor</title>
+  <style>
+    body { font-family: monospace; background:#111; color:#eee; padding:20px; }
+    .box { border:1px solid #444; padding:12px; margin-bottom:12px; }
+    .paused { color:#ff4d4d; font-weight:bold; }
+    .running { color:#4dff88; font-weight:bold; }
+    button { padding:6px 12px; }
+  </style>
 </head>
 <body>
-  <h2>Predict API 테스트</h2>
 
-  <label>Race ID</label><br/>
-  <input id="race" value="RACE_TEST_001"/><br/><br/>
+<h2>🚦 Risk Guard Status</h2>
 
-  <button onclick="callPredict()">/api/predict 호출</button>
+<div class="box">
+  <div>Status: <span id="paused">-</span></div>
+  <div>Reason: <span id="reason">-</span></div>
+  <div>RED streak: <span id="red">-</span></div>
+  <div>Last update: <span id="time">-</span></div>
+</div>
 
-  <pre id="out">대기중...</pre>
+<button onclick="resetPause()">RESET PAUSE</button>
 
-  <script>
-    async function callPredict(){
-      const race_id = document.getElementById("race").value;
-      const r = await fetch("/api/predict", {
-        method: "POST",
-        headers: {"Content-Type":"application/json"},
-        body: JSON.stringify({ race_id })
-      });
-      const j = await r.json();
-      document.getElementById("out").textContent = JSON.stringify(j, null, 2);
-    }
-  </script>
+<script>
+const token = prompt("ADMIN TOKEN")
+
+const evt = new EventSource("/api/admin/risk/stream", {
+  headers: { "x-admin-token": token }
+})
+
+evt.onmessage = (e) => {
+  const d = JSON.parse(e.data)
+  document.getElementById("paused").innerText =
+    d.paused ? "PAUSED" : "RUNNING"
+  document.getElementById("paused").className =
+    d.paused ? "paused" : "running"
+  document.getElementById("reason").innerText = d.pause_reason
+  document.getElementById("red").innerText = d.red_streak
+  document.getElementById("time").innerText =
+    new Date(d.last_updated * 1000).toLocaleTimeString()
+}
+
+function resetPause() {
+  fetch("/api/admin/pause/reset", {
+    method: "POST",
+    headers: { "x-admin-token": token }
+  })
+}
+</script>
+
 </body>
 </html>

@@ -1,273 +1,71 @@
-<!-- static/admin/index.html -->
 <!doctype html>
 <html lang="ko">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Admin Ops Dashboard</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <title>Race Predictor</title>
   <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 16px; background: #0b0f14; color: #e8eef6; }
-    .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
-    .card { background:#111826; border:1px solid #1e2a3a; border-radius: 12px; padding: 12px; }
-    .btn { background:#1f6feb; border:0; color:#fff; padding:8px 10px; border-radius:10px; cursor:pointer; }
-    .btn2 { background:#223047; }
-    .btn3 { background:#2a3b55; }
-    .btn:disabled { opacity:.5; cursor:not-allowed; }
-    .pill { display:inline-flex; gap:8px; align-items:center; padding:6px 10px; border-radius:999px; border:1px solid #26364c; background:#0f1624; }
-    .toggle { display:inline-flex; gap:8px; align-items:center; cursor:pointer; user-select:none; }
-    .toggle input { transform: scale(1.2); }
-    table { width:100%; border-collapse: collapse; font-size: 13px; }
-    th, td { border-bottom: 1px solid #1e2a3a; padding: 8px; vertical-align: top; }
-    th { text-align:left; color:#9fb2cc; }
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background:#0b0f14;
+      color:#e8eef6;
+      margin:0;
+      padding:20px;
+    }
+    .card {
+      max-width: 640px;
+      margin: 0 auto;
+      background:#111826;
+      border:1px solid #1e2a3a;
+      border-radius:14px;
+      padding:16px;
+    }
+    button {
+      background:#1f6feb;
+      border:0;
+      color:#fff;
+      padding:10px 14px;
+      border-radius:10px;
+      cursor:pointer;
+      width:100%;
+      margin-top:10px;
+    }
+    pre {
+      background:#0b1220;
+      border:1px solid #26364c;
+      border-radius:10px;
+      padding:12px;
+      margin-top:12px;
+      overflow:auto;
+    }
     .muted { color:#9fb2cc; }
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
-    .split { display:grid; grid-template-columns: 1.2fr .8fr; gap: 12px; }
-    @media (max-width: 980px){ .split{ grid-template-columns:1fr; } }
-    .small { font-size: 12px; }
   </style>
 </head>
 <body>
-  <div class="row" style="justify-content:space-between;">
-    <div class="row">
-      <div class="pill">
-        <span class="muted">Admin Token</span>
-        <input id="token" class="mono" style="width:220px; padding:6px; border-radius:8px; border:1px solid #26364c; background:#0b1220; color:#e8eef6;" placeholder="x-admin-token" />
-        <button class="btn btn2" onclick="saveToken()">저장</button>
-      </div>
 
-      <div class="pill">
-        <button class="btn" onclick="callStart()">ON</button>
-        <button class="btn btn2" onclick="callStop()">OFF</button>
-        <button class="btn btn3" onclick="callRunOnce()">RUN</button>
-        <button class="btn" style="background:#d14" onclick="callReset()">RESET RED</button>
-      </div>
-    </div>
+<div class="card">
+  <h2>경마 예측</h2>
+  <p class="muted">실시간 예측 결과만 표시됩니다</p>
 
-    <div class="row">
-      <div class="pill small">
-        <span class="muted">Slack</span>
-        <span id="slackHint" class="mono">ENV: SLACK_ENABLED=1, SLACK_WEBHOOK_URL</span>
-      </div>
-    </div>
-  </div>
+  <button onclick="runPredict()">예측 요청</button>
 
-  <div class="split" style="margin-top: 12px;">
-    <div class="card">
-      <div class="row" style="justify-content:space-between;">
-        <div class="row">
-          <strong>운영 로그</strong>
-          <span class="muted small">필터 적용 상태로 CSV 다운로드</span>
-        </div>
-        <div class="row">
-          <label class="toggle"><input type="checkbox" id="fRUN" checked onchange="refreshAll()">RUN</label>
-          <label class="toggle"><input type="checkbox" id="fRESET" checked onchange="refreshAll()">RESET</label>
-          <label class="toggle"><input type="checkbox" id="fFAIL" checked onchange="refreshAll()">FAIL</label>
-          <button class="btn btn2" onclick="downloadCsv()">CSV</button>
-          <button class="btn btn3" onclick="refreshAll()">새로고침</button>
-        </div>
-      </div>
-
-      <div style="margin-top:10px; overflow:auto; max-height: 420px;">
-        <table>
-          <thead>
-            <tr>
-              <th style="width:72px;">id</th>
-              <th style="width:190px;">ts</th>
-              <th style="width:90px;">action</th>
-              <th style="width:70px;">level</th>
-              <th>detail</th>
-            </tr>
-          </thead>
-          <tbody id="logBody"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="row" style="justify-content:space-between;">
-        <div class="row">
-          <strong>RED 히스토리</strong>
-          <span class="muted small">최근 N일</span>
-        </div>
-        <div class="row">
-          <select id="bucket" onchange="refreshChart()" style="padding:6px; border-radius:10px; border:1px solid #26364c; background:#0b1220; color:#e8eef6;">
-            <option value="hour">hour</option>
-            <option value="day">day</option>
-          </select>
-          <select id="days" onchange="refreshChart()" style="padding:6px; border-radius:10px; border:1px solid #26364c; background:#0b1220; color:#e8eef6;">
-            <option value="3">3</option>
-            <option value="7">7</option>
-            <option value="14">14</option>
-            <option value="30">30</option>
-          </select>
-        </div>
-      </div>
-
-      <div style="margin-top:10px;">
-        <canvas id="redChart" height="180"></canvas>
-      </div>
-
-      <div class="muted small" style="margin-top:10px;">
-        RED 기준은 서버 risk_guard 설정에 따릅니다
-      </div>
-    </div>
-  </div>
+  <pre id="result">대기 중…</pre>
+</div>
 
 <script>
-  const API = "/api/admin";
+async function runPredict(){
+  const res = await fetch("/api/predict", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      race_id: "demo-" + Date.now(),
+      mock_signal: Math.random() * 2 - 1
+    })
+  })
 
-  function getToken(){
-    return localStorage.getItem("admin_token") || "";
-  }
-  function saveToken(){
-    localStorage.setItem("admin_token", document.getElementById("token").value.trim());
-    refreshAll();
-  }
-  function headers(){
-    return { "x-admin-token": getToken() };
-  }
-
-  async function apiGet(path){
-    const res = await fetch(API + path, { headers: headers() });
-    if(!res.ok) throw new Error(await res.text());
-    return res.json();
-  }
-  async function apiPost(path){
-    const res = await fetch(API + path, { method:"POST", headers: headers() });
-    if(!res.ok) throw new Error(await res.text());
-    return res.json();
-  }
-
-  async function callStart(){ await apiPost("/scheduler/start"); await refreshAll(); }
-  async function callStop(){ await apiPost("/scheduler/stop"); await refreshAll(); }
-  async function callRunOnce(){ await apiPost("/scheduler/run_once"); await refreshAll(); }
-  async function callReset(){ await apiPost("/reset_red"); await refreshAll(); }
-
-  function selectedActions(){
-    const a = [];
-    if(document.getElementById("fRUN").checked) a.push("RUN","RUN_BLOCKED");
-    if(document.getElementById("fRESET").checked) a.push("RESET");
-    if(document.getElementById("fFAIL").checked) a.push("FAIL");
-    // 기타 표시하고 싶으면 여기에 추가
-    return a;
-  }
-
-  async function refreshLogs(){
-    const actions = selectedActions().join(",");
-    const data = await apiGet(`/logs?actions=${encodeURIComponent(actions)}&limit=200`);
-    const body = document.getElementById("logBody");
-    body.innerHTML = "";
-    for(const it of data.items){
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td class="mono">${it.id}</td>
-        <td class="mono">${it.ts}</td>
-        <td class="mono">${it.action}</td>
-        <td class="mono">${it.level}</td>
-        <td class="mono">${escapeHtml(JSON.stringify(it.detail || {}))}</td>
-      `;
-      body.appendChild(tr);
-    }
-  }
-
-  function downloadCsv(){
-    const actions = selectedActions().join(",");
-    const url = `${API}/logs.csv?actions=${encodeURIComponent(actions)}&limit=5000`;
-    // 토큰 헤더가 필요해서 fetch 후 blob으로 저장
-    fetch(url, { headers: headers() })
-      .then(r => {
-        if(!r.ok) return r.text().then(t => { throw new Error(t); });
-        return r.blob();
-      })
-      .then(blob => {
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
-        a.download = "ops_logs.csv";
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-      })
-      .catch(e => alert("CSV 실패: " + e.message));
-  }
-
-  let chart;
-  async function refreshChart(){
-    const bucket = document.getElementById("bucket").value;
-    const days = document.getElementById("days").value;
-    const data = await apiGet(`/red_history?bucket=${bucket}&days=${days}`);
-
-    const ctx = document.getElementById("redChart");
-    if(chart) chart.destroy();
-    chart = new Chart(ctx, {
-      type: "bar",
-      data: {
-        labels: data.labels || [],
-        datasets: [{
-          label: "RED count",
-          data: data.counts || []
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: { legend: { labels: { color: "#e8eef6" } } },
-        scales: {
-          x: { ticks: { color: "#9fb2cc" }, grid: { color: "#1e2a3a" } },
-          y: { ticks: { color: "#9fb2cc" }, grid: { color: "#1e2a3a" } }
-        }
-      }
-    });
-  }
-
-  async function refreshAll(){
-    document.getElementById("token").value = getToken();
-    try{
-      await refreshLogs();
-      await refreshChart();
-    }catch(e){
-      console.error(e);
-      alert("갱신 실패: " + e.message);
-    }
-  }
-
-  function escapeHtml(s){
-    return (s||"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
-  }
-
-  // init
-  document.getElementById("token").value = getToken();
-  refreshAll();
-  setInterval(refreshAll, 3000);
-</script>
-
-<script>
-const evtSource = new EventSource("/sse/ops");
-
-evtSource.onmessage = function (event) {
-    try {
-        const rows = JSON.parse(event.data);
-        renderLogs(rows);
-    } catch (e) {
-        console.error("SSE parse error", e);
-    }
-};
-
-function renderLogs(rows) {
-    const tbody = document.querySelector("#logs-body");
-    if (!tbody) return;
-
-    tbody.innerHTML = "";
-    rows.forEach(r => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-            <td>${r.id}</td>
-            <td>${r.ts}</td>
-            <td>${r.action}</td>
-            <td>${r.level}</td>
-            <td>${JSON.stringify(r.detail || {})}</td>
-        `;
-        tbody.appendChild(tr);
-    });
+  const data = await res.json()
+  document.getElementById("result").textContent =
+    JSON.stringify(data, null, 2)
 }
 </script>
 

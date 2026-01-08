@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>결과 입력</title>
+<style>
+body { font-family: Arial; background:#f5f6f8; margin:20px; }
+.card { background:#fff; padding:15px; border-radius:6px; max-width:400px; }
+input, button { padding:6px; margin-top:5px; width:100%; }
+</style>
+</head>
+<body>
+
+<h2>경주 결과 입력</h2>
+
+<div class="card">
+  <label>Race ID</label>
+  <input id="raceId" placeholder="20260103_01">
+
+  <label>1착 마번</label>
+  <input id="winner" type="number">
+
+  <button onclick="submitResult()">저장</button>
+  <p id="msg"></p>
+</div>
+
+<script>
+async function submitResult() {
+  const raceId = document.getElementById("raceId").value;
+  const winner = document.getElementById("winner").value;
+
+  const res = await fetch(`/api/admin/result?race_id=${raceId}&winner=${winner}`, {
+    method: "POST"
+  }).then(r=>r.json());
+
+  document.getElementById("msg").innerText =
+    res.ok ? "저장 완료" : "실패";
+}
+</script>
+
+</body>
+</html>

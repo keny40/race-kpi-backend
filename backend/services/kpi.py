@@ -1,67 +1,116 @@
+# backend/services/kpi.py
 import sqlite3
+from typing import Dict, Any
 
-DB_PATH = "races.db"
 
-def _weight_from_retry(retry_count: int) -> float:
-    # 운영 기본값: 지연이 클수록 KPI 반영을 약화
-    if retry_count <= 0:
-        return 1.0
-    if retry_count <= 2:
-        return 0.7
-    if retry_count <= 4:
-        return 0.4
-    return 0.0
+def _table_exists(cur, name: str) -> bool:
+    r = cur.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
+        (name,),
+    ).fetchone()
+    return r is not None
 
-def calc_kpi(mode: str = "weight", exclude_retry_ge: int = 5):
-    """
-    mode:
-      - "raw": 그냥 outcome 카운트
-      - "exclude": retry_count >= exclude_retry_ge 인 경주는 KPI에서 제외
-      - "weight": retry_count에 따라 가중치 적용 (기본 추천)
-    """
-    con = sqlite3.connect(DB_PATH)
-    cur = con.cursor()
 
-    # predictions 최신 outcome 기준
-    cur.execute("""
-        SELECT p.race_id, p.outcome
+def get_kpi_summary(db_path: str) -> Dict[str, Any]:
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    has_actual = _table_exists(cur, "actual_results")
+
+    # ==========================
+    # MOCK KPI (actual_results 없음)
+    # ==========================
+    if not has_actual:
+        rows = cur.execute("""
+            SELECT
+                predicted_horse_no,
+                confidence,
+                passed
+            FROM predictions
+        """).fetchall()
+
+        total = len(rows)
+
+        bins = {
+            "0.0-0.3": {"total": 0},
+            "0.3-0.6": {"total": 0},
+            "0.6-1.0": {"total": 0},
+        }
+
+        for r in rows:
+            if r["passed"] == 1:
+                continue
+
+            conf = r["confidence"] or 0.0
+            if conf < 0.3:
+                key = "0.0-0.3"
+            elif conf < 0.6:
+                key = "0.3-0.6"
+            else:
+                key = "0.6-1.0"
+
+            bins[key]["total"] += 1
+
+        conn.close()
+
+        return {
+            "mode": "MOCK",
+            "total": total,
+            "hit": None,
+            "miss": None,
+            "hit_rate": None,
+            "by_confidence": bins,
+        }
+
+    # ==========================
+    # REAL KPI (actual_results 존재)
+    # ==========================
+    rows = cur.execute("""
+        SELECT
+            p.predicted_horse_no,
+            p.confidence,
+            p.passed,
+            a.winner
         FROM predictions p
-        WHERE p.outcome IS NOT NULL
-    """)
-    preds = cur.fetchall()
+        JOIN actual_results a
+          ON p.race_id = a.race_id
+    """).fetchall()
 
-    stats = {"HIT": 0.0, "MISS": 0.0, "PASS": 0.0}
-    total_weight = 0.0
+    total = len(rows)
+    hit = 0
 
-    for race_id, outcome in preds:
-        cur.execute("""
-            SELECT confirmed_retry_count
-            FROM ingest_meta
-            WHERE race_id=?
-        """, (race_id,))
-        row = cur.fetchone()
-        retry_count = int(row[0]) if row and row[0] is not None else 0
+    bins = {
+        "0.0-0.3": {"hit": 0, "total": 0},
+        "0.3-0.6": {"hit": 0, "total": 0},
+        "0.6-1.0": {"hit": 0, "total": 0},
+    }
 
-        if mode == "exclude" and retry_count >= exclude_retry_ge:
+    for r in rows:
+        if r["passed"] == 1:
             continue
 
-        w = 1.0 if mode in ("raw", "exclude") else _weight_from_retry(retry_count)
-        if w <= 0:
-            continue
+        conf = r["confidence"] or 0.0
+        if conf < 0.3:
+            key = "0.0-0.3"
+        elif conf < 0.6:
+            key = "0.3-0.6"
+        else:
+            key = "0.6-1.0"
 
-        if outcome in stats:
-            stats[outcome] += w
-            total_weight += w
+        bins[key]["total"] += 1
 
-    hit_rate = (stats["HIT"] / total_weight * 100.0) if total_weight > 0 else 0.0
+        if r["predicted_horse_no"] == r["winner"]:
+            hit += 1
+            bins[key]["hit"] += 1
 
-    con.close()
+    conn.close()
 
     return {
-        "HIT": round(stats["HIT"], 2),
-        "MISS": round(stats["MISS"], 2),
-        "PASS": round(stats["PASS"], 2),
-        "TOTAL": round(total_weight, 2),
-        "HIT_RATE": round(hit_rate, 2),
-        "MODE": mode,
+        "mode": "REAL",
+        "total": total,
+        "hit": hit,
+        "miss": total - hit,
+        "hit_rate": round(hit / total, 4) if total else 0.0,
+        "by_confidence": bins,
     }

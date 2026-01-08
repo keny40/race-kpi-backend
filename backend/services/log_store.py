@@ -1,176 +1,142 @@
 # backend/services/log_store.py
-import os
-import json
 import sqlite3
+import time
+import json
+import os
+import urllib.request
 from typing import Any, Dict, List, Optional
 
 DB_PATH = os.getenv("DB_PATH", "races.db")
+SLACK_WEBHOOK_URL = os.getenv("SLACK_WEBHOOK_URL", "").strip()
 
 
 def _conn():
-    conn = sqlite3.connect(DB_PATH, check_same_thread=False)
+    conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
 
 
-def ensure_tables():
+def bootstrap_admin_tables():
     conn = _conn()
     cur = conn.cursor()
 
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS ops_logs (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        ts TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
-        action TEXT NOT NULL,
-        level TEXT NOT NULL DEFAULT 'INFO',
-        detail_json TEXT NOT NULL DEFAULT '{}'
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS admin_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            ts INTEGER NOT NULL,
+            level TEXT NOT NULL,
+            action TEXT NOT NULL,
+            message TEXT NOT NULL,
+            meta_json TEXT NOT NULL DEFAULT '{}'
+        )
+        """
     )
-    """)
-
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS ops_runs (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        ts TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
-        score REAL NOT NULL,
-        is_red INTEGER NOT NULL,
-        streak INTEGER NOT NULL,
-        paused INTEGER NOT NULL,
-        reasons_json TEXT NOT NULL DEFAULT '{}'
-    )
-    """)
 
     conn.commit()
     conn.close()
 
 
-def insert_log(action: str, detail: Optional[Dict[str, Any]] = None, level: str = "INFO"):
-    ensure_tables()
+def _slack_post(text: str) -> None:
+    if not SLACK_WEBHOOK_URL:
+        return
+    payload = json.dumps({"text": text}).encode("utf-8")
+    req = urllib.request.Request(
+        SLACK_WEBHOOK_URL,
+        data=payload,
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=5) as _:
+            pass
+    except Exception:
+        # Slack 실패가 운영 로직을 깨면 안됨
+        return
+
+
+def insert_log(level: str, action: str, message: str, meta: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    bootstrap_admin_tables()
+
+    ts = int(time.time())
+    meta = meta or {}
+    meta_json = json.dumps(meta, ensure_ascii=False)
+
     conn = _conn()
     cur = conn.cursor()
     cur.execute(
-        "INSERT INTO ops_logs(action, level, detail_json) VALUES(?,?,?)",
-        (action, level, json.dumps(detail or {}, ensure_ascii=False)),
+        "INSERT INTO admin_logs (ts, level, action, message, meta_json) VALUES (?, ?, ?, ?, ?)",
+        (ts, level, action, message, meta_json),
     )
     conn.commit()
+    log_id = cur.lastrowid
     conn.close()
 
+    row = {"id": log_id, "ts": ts, "level": level, "action": action, "message": message, "meta": meta}
 
-def insert_run_snapshot(score: float, is_red: bool, streak: int, paused: bool, reasons: Dict[str, Any]):
-    ensure_tables()
+    # ===== A-24: FAIL 실시간 Slack 전송 =====
+    if action.upper() == "FAIL":
+        race_id = meta.get("race_id", "")
+        reason = meta.get("reason", "")
+        extra = meta.get("extra", "")
+        _slack_post(
+            f"🚨 FAIL 발생\nrace_id: {race_id}\nreason: {reason}\nmessage: {message}\nextra: {extra}\n(ts: {ts})"
+        )
+
+    # AUTO_PAUSE 같은 운영 이벤트도 Slack에 같이 보냄
+    if action.upper() == "AUTO_PAUSE":
+        reason = meta.get("reason", "")
+        fail_streak = meta.get("fail_streak", "")
+        _slack_post(f"⛔ AUTO_PAUSE\nreason: {reason}\nfail_streak: {fail_streak}\n(ts: {ts})")
+
+    return row
+
+
+def query_logs(limit: int = 200, action: str = "") -> List[Dict[str, Any]]:
+    bootstrap_admin_tables()
+
     conn = _conn()
     cur = conn.cursor()
-    cur.execute(
-        "INSERT INTO ops_runs(score, is_red, streak, paused, reasons_json) VALUES(?,?,?,?,?)",
-        (float(score), 1 if is_red else 0, int(streak), 1 if paused else 0, json.dumps(reasons or {}, ensure_ascii=False)),
-    )
-    conn.commit()
+    if action:
+        rows = cur.execute(
+            "SELECT * FROM admin_logs WHERE action=? ORDER BY id DESC LIMIT ?",
+            (action, limit),
+        ).fetchall()
+    else:
+        rows = cur.execute(
+            "SELECT * FROM admin_logs ORDER BY id DESC LIMIT ?",
+            (limit,),
+        ).fetchall()
     conn.close()
 
-
-def query_logs(
-    actions: Optional[List[str]] = None,
-    levels: Optional[List[str]] = None,
-    limit: int = 200,
-    offset: int = 0,
-):
-    ensure_tables()
-    conn = _conn()
-    cur = conn.cursor()
-
-    where = []
-    params: List[Any] = []
-
-    if actions:
-        where.append("action IN ({})".format(",".join(["?"] * len(actions))))
-        params.extend(actions)
-
-    if levels:
-        where.append("level IN ({})".format(",".join(["?"] * len(levels))))
-        params.extend(levels)
-
-    where_sql = ("WHERE " + " AND ".join(where)) if where else ""
-    sql = f"""
-        SELECT id, ts, action, level, detail_json
-        FROM ops_logs
-        {where_sql}
-        ORDER BY id DESC
-        LIMIT ? OFFSET ?
-    """
-    params.extend([int(limit), int(offset)])
-
-    rows = cur.execute(sql, params).fetchall()
-    conn.close()
-
-    out = []
+    out: List[Dict[str, Any]] = []
     for r in rows:
-        out.append({
-            "id": r["id"],
-            "ts": r["ts"],
-            "action": r["action"],
-            "level": r["level"],
-            "detail": json.loads(r["detail_json"] or "{}"),
-        })
+        try:
+            meta = json.loads(r["meta_json"] or "{}")
+        except Exception:
+            meta = {}
+        out.append(
+            {
+                "id": r["id"],
+                "ts": r["ts"],
+                "level": r["level"],
+                "action": r["action"],
+                "message": r["message"],
+                "meta": meta,
+            }
+        )
     return out
 
 
-def query_logs_csv(actions: Optional[List[str]] = None, levels: Optional[List[str]] = None, limit: int = 5000):
-    # CSV는 최신 limit건만
-    ensure_tables()
-    conn = _conn()
-    cur = conn.cursor()
+def query_logs_csv(limit: int = 500, action: str = "") -> str:
+    import csv
+    import io
 
-    where = []
-    params: List[Any] = []
+    rows = query_logs(limit=limit, action=action)
 
-    if actions:
-        where.append("action IN ({})".format(",".join(["?"] * len(actions))))
-        params.extend(actions)
-
-    if levels:
-        where.append("level IN ({})".format(",".join(["?"] * len(levels))))
-        params.extend(levels)
-
-    where_sql = ("WHERE " + " AND ".join(where)) if where else ""
-    sql = f"""
-        SELECT id, ts, action, level, detail_json
-        FROM ops_logs
-        {where_sql}
-        ORDER BY id DESC
-        LIMIT ?
-    """
-    params.append(int(limit))
-    rows = cur.execute(sql, params).fetchall()
-    conn.close()
-    return rows
-
-
-def query_red_history(bucket: str = "hour", days: int = 3):
-    """
-    bucket: hour | day
-    days: 최근 N일
-    """
-    ensure_tables()
-    conn = _conn()
-    cur = conn.cursor()
-
-    if bucket == "day":
-        grp = "substr(ts, 1, 10)"  # YYYY-MM-DD
-        label = "day"
-    else:
-        grp = "substr(ts, 1, 13)"  # YYYY-MM-DDTHH
-        label = "hour"
-
-    rows = cur.execute(f"""
-        SELECT {grp} AS bucket, COUNT(*) AS c
-        FROM ops_runs
-        WHERE is_red = 1
-          AND ts >= datetime('now', ?)
-        GROUP BY {grp}
-        ORDER BY bucket ASC
-    """, (f"-{int(days)} day",)).fetchall()
-
-    conn.close()
-
-    labels = [r["bucket"] for r in rows]
-    counts = [r["c"] for r in rows]
-    return {"bucket": label, "labels": labels, "counts": counts}
+    buf = io.StringIO()
+    w = csv.writer(buf)
+    w.writerow(["id", "ts", "level", "action", "message", "meta_json"])
+    for r in rows:
+        w.writerow([r["id"], r["ts"], r["level"], r["action"], r["message"], json.dumps(r["meta"], ensure_ascii=False)])
+    return buf.getvalue()

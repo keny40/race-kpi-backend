@@ -1,32 +1,221 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <title>사용자 예측</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Race Predictor</title>
+  <style>
+    body {
+      margin: 0;
+      background: #0b0f16;
+      color: #e8eefc;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+    }
+    .wrap {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 {
+      margin: 0 0 14px 0;
+      font-size: 22px;
+    }
+    .input {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    input {
+      background: #0e1524;
+      border: 1px solid #24314a;
+      color: #e8eefc;
+      padding: 10px 12px;
+      border-radius: 10px;
+      min-width: 260px;
+    }
+    button {
+      background: #1b2a44;
+      border: 1px solid #2a3a58;
+      color: #e8eefc;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #223656;
+    }
+
+    .result {
+      margin-top: 20px;
+    }
+
+    .decision {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      border: 1px solid #2a3a58;
+      background: #0e1524;
+      margin-left: 6px;
+    }
+
+    .ok { border-color: #1d6b46; background: #0f1f18; }
+    .warn { border-color: #8a3a3a; background: #221011; }
+    .mid { border-color: #6b6b2d; background: #1f1f10; }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .card {
+      background: #121a28;
+      border: 1px solid #1e2a40;
+      border-radius: 14px;
+      padding: 14px;
+    }
+
+    .card.best {
+      border-color: #2f6fe4;
+      box-shadow: 0 0 0 1px #2f6fe4 inset;
+    }
+
+    .k {
+      font-size: 12px;
+      opacity: 0.7;
+    }
+    .v {
+      font-size: 18px;
+      font-weight: 700;
+      margin-top: 4px;
+    }
+
+    .row {
+      display: flex;
+      gap: 10px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+
+    .muted {
+      opacity: 0.65;
+      font-size: 12px;
+    }
+  </style>
 </head>
 <body>
+  <div class="wrap">
+    <h1>Race Predictor</h1>
 
-<button id="predictBtn" onclick="doPredict()">예측하기</button>
+    <div class="input">
+      <input id="raceId" placeholder="race_id 입력 (예: RACE_20260102_01)" />
+      <button id="btnPredict">PREDICT</button>
+    </div>
 
-<pre id="result"></pre>
+    <div id="result" class="result"></div>
+  </div>
 
 <script>
-async function checkForcePass() {
-  const res = await fetch("/api/admin/status");
-  const s = await res.json();
-  document.getElementById("predictBtn").disabled = s.force_pass;
-}
+  const el = (id) => document.getElementById(id);
 
-async function doPredict() {
-  const res = await fetch("/api/predict", { method: "POST" });
-  const data = await res.json();
-  document.getElementById("result").innerText =
-    JSON.stringify(data, null, 2);
-}
+  function pill(text, level) {
+    return `<span class="pill ${level}">${text}</span>`;
+  }
 
-checkForcePass();
-setInterval(checkForcePass, 5000);
+  function confLevel(v) {
+    if (v >= 0.4) return "ok";
+    if (v >= 0.25) return "mid";
+    return "warn";
+  }
+
+  function roiLevel(v) {
+    if (v >= 1.2) return "ok";
+    if (v >= 1.0) return "mid";
+    return "warn";
+  }
+
+  function render(data) {
+    const box = el("result");
+    box.innerHTML = "";
+
+    if (!data) return;
+
+    const decision = data.decision;
+    const isPass = decision === "PASS";
+
+    const head = document.createElement("div");
+    head.className = "decision";
+    head.innerHTML = isPass
+      ? `결정: PASS ${pill(data.reason || "pass", "warn")}`
+      : `결정: ${decision}
+         ${pill(data.strategy || "-", "ok")}
+         ${pill("score " + data.score, "mid")}`;
+
+    box.appendChild(head);
+
+    const cards = document.createElement("div");
+    cards.className = "cards";
+
+    (data.candidates || []).forEach(c => {
+      const card = document.createElement("div");
+      card.className = "card";
+      if (!isPass && c.horse_no === decision) {
+        card.classList.add("best");
+      }
+
+      card.innerHTML = `
+        <div class="k">Horse</div>
+        <div class="v">${c.horse_no}</div>
+
+        <div class="row">
+          ${pill(c.strategy, "mid")}
+          ${pill("w " + c.strategy_weight, "mid")}
+        </div>
+
+        <div class="row">
+          ${pill("conf " + c.calibrated_confidence, confLevel(c.calibrated_confidence))}
+          ${pill("ROI " + c.roi, roiLevel(c.roi))}
+        </div>
+
+        <div class="row">
+          ${pill("recent " + c.recent_roi_factor, "mid")}
+          ${pill("score " + c.final_score, "mid")}
+        </div>
+      `;
+
+      cards.appendChild(card);
+    });
+
+    box.appendChild(cards);
+  }
+
+  async function predict() {
+    const raceId = el("raceId").value.trim();
+    if (!raceId) return;
+
+    el("result").innerHTML = "predicting...";
+
+    const r = await fetch("/api/predict", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ race_id: raceId })
+    });
+
+    const j = await r.json();
+    render(j);
+  }
+
+  el("btnPredict").onclick = predict;
 </script>
-
 </body>
 </html>

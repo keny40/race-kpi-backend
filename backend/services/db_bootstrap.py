@@ -1,85 +1,48 @@
-# backend/services/db_bootstrap.py
 import sqlite3
-from pathlib import Path
-from datetime import datetime
-
-BASE_DIR = Path(__file__).resolve().parents[2]
-DB_PATH = BASE_DIR / "races.db"
+from backend.services.db import DB_PATH
 
 
 def bootstrap_db():
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(DB_PATH, check_same_thread=False)
+    conn.row_factory = sqlite3.Row
     cur = conn.cursor()
 
-    # =========================
-    # Scheduler 상태 (ON / OFF / RUN / PAUSE)
-    # =========================
+    # === predictions ===
     cur.execute("""
-    CREATE TABLE IF NOT EXISTS scheduler_state (
-        id INTEGER PRIMARY KEY CHECK (id = 1),
-        running INTEGER DEFAULT 0,
-        paused INTEGER DEFAULT 0,
-        mode TEXT DEFAULT 'MOCK',
-        interval_sec INTEGER DEFAULT 5,
-        last_run_at TEXT,
-        updated_at TEXT
-    )
+        CREATE TABLE IF NOT EXISTS predictions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            race_id TEXT,
+            predicted_horse_no INTEGER,
+            confidence REAL,
+            passed INTEGER DEFAULT 0,
+            created_at TEXT DEFAULT (datetime('now'))
+        )
     """)
 
+    # === guard_state ===
     cur.execute("""
-    INSERT OR IGNORE INTO scheduler_state (id, running, paused, mode, interval_sec, updated_at)
-    VALUES (1, 0, 0, 'MOCK', 5, ?)
-    """, (datetime.utcnow().isoformat(),))
-
-    # =========================
-    # Risk Guard 상태
-    # =========================
+        CREATE TABLE IF NOT EXISTS guard_state (
+            id INTEGER PRIMARY KEY CHECK (id = 1),
+            red_streak INTEGER DEFAULT 0,
+            paused INTEGER DEFAULT 0,
+            reason TEXT DEFAULT '',
+            updated_at TEXT DEFAULT (datetime('now'))
+        )
+    """)
     cur.execute("""
-    CREATE TABLE IF NOT EXISTS risk_state (
-        id INTEGER PRIMARY KEY CHECK (id = 1),
-        score REAL DEFAULT 0.0,
-        threshold REAL DEFAULT 0.75,
-        streak INTEGER DEFAULT 0,
-        is_red INTEGER DEFAULT 0,
-        reason TEXT,
-        paused INTEGER DEFAULT 0,
-        updated_at TEXT
-    )
+        INSERT OR IGNORE INTO guard_state (id, red_streak, paused)
+        VALUES (1, 0, 0)
     """)
 
+    # === ops_logs ===
     cur.execute("""
-    INSERT OR IGNORE INTO risk_state
-    (id, score, threshold, streak, is_red, paused, updated_at)
-    VALUES (1, 0.0, 0.75, 0, 0, 0, ?)
-    """, (datetime.utcnow().isoformat(),))
-
-    # =========================
-    # RED 원인 Feature 로그
-    # =========================
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS risk_features (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        run_at TEXT,
-        f_html_text_too_short INTEGER DEFAULT 0,
-        f_table_count_low INTEGER DEFAULT 0,
-        f_row_count_low INTEGER DEFAULT 0,
-        raw_features TEXT
-    )
-    """)
-
-    # =========================
-    # 관리자 액션 로그 (ON / OFF / RUN / RESET)
-    # =========================
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS admin_action_logs (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        action TEXT,
-        result TEXT,
-        created_at TEXT
-    )
+        CREATE TABLE IF NOT EXISTS ops_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            ts TEXT DEFAULT (datetime('now')),
+            action TEXT,
+            detail TEXT
+        )
     """)
 
     conn.commit()
     conn.close()
-
-    print(f"[DB] bootstrap completed: {DB_PATH}")

@@ -1,246 +1,306 @@
 import sqlite3
-from collections import defaultdict
-from datetime import datetime, timedelta
+from typing import Dict, Any, List, Optional, Tuple
+import math
 
-DB_PATH = "backend/db/app.db"
-
-CONF_BINS = [
-    (0.30, 0.39),
-    (0.40, 0.49),
-    (0.50, 1.00),
-]
+DB_PATH = "races.db"
 
 
-# ======================
-# DB
-# ======================
-def _connect():
-    return sqlite3.connect(DB_PATH)
+def _conn():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
 
 
-# ======================
-# 기간 계산 (호환용)
-# ======================
-def get_period_range(period: str):
-    now = datetime.now()
-
-    if period == "month":
-        start = now.replace(day=1)
-    elif period == "quarter":
-        month = ((now.month - 1) // 3) * 3 + 1
-        start = now.replace(month=month, day=1)
-    else:
-        return None, None
-
-    return start.isoformat(), now.isoformat()
+def _safe_float(x, default=0.0) -> float:
+    try:
+        return float(x)
+    except Exception:
+        return float(default)
 
 
-# ======================
-# RAW KPI ROW FETCH
-# ======================
-def fetch_kpi_rows(period_start=None, period_end=None):
-    con = _connect()
-    cur = con.cursor()
-
-    sql = """
-    SELECT p.model, p.decision, p.confidence, a.actual
-    FROM predictions p
-    JOIN actual_results a ON p.race_id = a.race_id
+def get_kpi_summary() -> Dict[str, Any]:
     """
-    params = []
+    기존 summary + confidence bin 히트율
+    (멀티전략 구조에서는 전체 합산)
+    """
+    conn = _conn()
+    cur = conn.cursor()
 
-    if period_start and period_end:
-        sql += " WHERE p.created_at BETWEEN ? AND ?"
-        params = [period_start, period_end]
+    rows = cur.execute(
+        """
+        SELECT race_id, strategy, predicted_horse_no AS decision, confidence, passed,
+               (SELECT winner FROM actual_results a WHERE a.race_id = p.race_id) AS winner
+        FROM predictions p
+        WHERE passed = 0
+          AND predicted_horse_no IS NOT NULL
+        """
+    ).fetchall()
 
-    cur.execute(sql, params)
-    rows = cur.fetchall()
-    con.close()
-    return rows
+    total = len(rows)
+    hit = 0
+    bins = {"0.0-0.3": {"n": 0, "hit": 0}, "0.3-0.6": {"n": 0, "hit": 0}, "0.6-1.0": {"n": 0, "hit": 0}}
 
+    for r in rows:
+        w = r["winner"]
+        if w is not None and int(r["decision"]) == int(w):
+            hit += 1
 
-# ======================
-# KPI CORE LOGIC
-# ======================
-def compute_kpi_rows(rows):
-    result = defaultdict(lambda: {
-        "total": 0,
-        "hit": 0,
-        "miss": 0,
-        "pass": 0,
-        "confidence_bins": defaultdict(lambda: {"hit": 0, "miss": 0})
-    })
-
-    for model, decision, confidence, actual in rows:
-        r = result[model]
-        r["total"] += 1
-
-        if decision == "PASS":
-            r["pass"] += 1
-            continue
-
-        if decision == actual:
-            r["hit"] += 1
-            outcome = "hit"
+        c = _safe_float(r["confidence"])
+        if c < 0.3:
+            key = "0.0-0.3"
+        elif c < 0.6:
+            key = "0.3-0.6"
         else:
-            r["miss"] += 1
-            outcome = "miss"
+            key = "0.6-1.0"
 
-        for lo, hi in CONF_BINS:
-            if lo <= confidence <= hi:
-                key = f"{lo:.2f}-{hi:.2f}" if hi < 1 else "0.50+"
-                r["confidence_bins"][key][outcome] += 1
-                break
+        bins[key]["n"] += 1
+        if w is not None and int(r["decision"]) == int(w):
+            bins[key]["hit"] += 1
 
-    final = {}
-    for model, r in result.items():
-        denom = r["hit"] + r["miss"]
-        accuracy = round(r["hit"] / denom, 4) if denom else 0.0
-        pass_rate = round(r["pass"] / r["total"], 4) if r["total"] else 0.0
+    conn.close()
 
-        final[model] = {
-            "model": model,
-            "total": r["total"],
-            "hit": r["hit"],
-            "miss": r["miss"],
-            "pass": r["pass"],
-            "accuracy": accuracy,
-            "pass_rate": pass_rate,
-            "confidence_bins": r["confidence_bins"],
-        }
-
-    return final
-
-
-# ======================
-# KPI MATRIX (호환용)
-# ======================
-def fetch_kpi_matrix(period=None):
-    start, end = get_period_range(period) if period else (None, None)
-    rows = fetch_kpi_rows(start, end)
-    data = compute_kpi_rows(rows)
-
-    matrix = []
-    for model, r in data.items():
-        for bin_key, v in r["confidence_bins"].items():
-            matrix.append({
-                "model": model,
-                "confidence_bin": bin_key,
-                "hit": v["hit"],
-                "miss": v["miss"]
-            })
-
-    return matrix
-def prev_period(period: str):
-    """
-    이전 기간 범위 계산 (kpi_trend 호환용)
-    """
-    now = datetime.now()
-
-    if period == "month":
-        this_start = now.replace(day=1)
-        prev_end = this_start - timedelta(days=1)
-        prev_start = prev_end.replace(day=1)
-
-    elif period == "quarter":
-        current_q = (now.month - 1) // 3
-        prev_q_end_month = current_q * 3
-        if prev_q_end_month <= 0:
-            prev_q_end_month = 12
-            year = now.year - 1
-        else:
-            year = now.year
-
-        prev_end = datetime(year, prev_q_end_month, 1) - timedelta(days=1)
-        prev_start = datetime(
-            prev_end.year,
-            ((prev_end.month - 1) // 3) * 3 + 1,
-            1
-        )
-    else:
-        return None, None
-
-    return prev_start.isoformat(), prev_end.isoformat()
-def record_prediction(
-    race_id: str,
-    model: str,
-    decision: str,
-    confidence: float
-):
-    """
-    예측 결과 저장 (predict 라우터 호환용)
-    """
-    con = _connect()
-    cur = con.cursor()
-
-    cur.execute(
-        """
-        INSERT INTO predictions (race_id, model, decision, confidence, created_at)
-        VALUES (?, ?, ?, ?, ?)
-        """,
-        (
-            race_id,
-            model,
-            decision,
-            confidence,
-            datetime.now().isoformat()
-        )
-    )
-
-    con.commit()
-    con.close()
-
-def upsert_actual_result(
-    race_id: str,
-    actual: str
-):
-    """
-    실측 결과 저장 또는 업데이트
-    """
-    con = _connect()
-    cur = con.cursor()
-
-    cur.execute(
-        """
-        INSERT INTO actual_results (race_id, actual, created_at)
-        VALUES (?, ?, ?)
-        ON CONFLICT(race_id)
-        DO UPDATE SET actual=excluded.actual
-        """,
-        (
-            race_id,
-            actual,
-            datetime.now().isoformat()
-        )
-    )
-
-    con.commit()
-    con.close()
-
-
-def get_actual_result(race_id: str):
-    """
-    실측 결과 조회
-    """
-    con = _connect()
-    cur = con.cursor()
-
-    cur.execute(
-        """
-        SELECT race_id, actual
-        FROM actual_results
-        WHERE race_id = ?
-        """,
-        (race_id,)
-    )
-
-    row = cur.fetchone()
-    con.close()
-
-    if not row:
-        return None
+    def acc(h, n):
+        return (h / n) if n else 0.0
 
     return {
-        "race_id": row[0],
-        "actual": row[1]
+        "total": total,
+        "hit": hit,
+        "accuracy": acc(hit, total),
+        "bins": {
+            k: {"n": v["n"], "hit": v["hit"], "accuracy": acc(v["hit"], v["n"])}
+            for k, v in bins.items()
+        },
+    }
+
+
+def get_kpi_by_strategy() -> List[Dict[str, Any]]:
+    """
+    전략별 성능판: total/hit/accuracy/avg_confidence
+    """
+    conn = _conn()
+    cur = conn.cursor()
+
+    rows = cur.execute(
+        """
+        SELECT
+          p.strategy AS strategy,
+          COUNT(*) AS total,
+          SUM(CASE WHEN a.winner IS NOT NULL AND p.predicted_horse_no = a.winner THEN 1 ELSE 0 END) AS hit,
+          AVG(p.confidence) AS avg_confidence
+        FROM predictions p
+        LEFT JOIN actual_results a
+          ON a.race_id = p.race_id
+        WHERE p.passed = 0
+          AND p.predicted_horse_no IS NOT NULL
+        GROUP BY p.strategy
+        ORDER BY total DESC
+        """
+    ).fetchall()
+
+    conn.close()
+
+    out = []
+    for r in rows:
+        total = int(r["total"] or 0)
+        hit = int(r["hit"] or 0)
+        out.append(
+            {
+                "strategy": r["strategy"],
+                "total": total,
+                "hit": hit,
+                "accuracy": (hit / total) if total else 0.0,
+                "avg_confidence": _safe_float(r["avg_confidence"]),
+            }
+        )
+    return out
+
+
+def get_kpi_by_confidence(threshold: float, strategy: Optional[str] = None) -> Dict[str, Any]:
+    """
+    컷 이상만 대상으로 KPI
+    """
+    conn = _conn()
+    cur = conn.cursor()
+
+    params: List[Any] = [float(threshold)]
+    where_strategy = ""
+    if strategy:
+        where_strategy = " AND p.strategy = ? "
+        params.append(strategy)
+
+    rows = cur.execute(
+        f"""
+        SELECT p.predicted_horse_no AS decision, p.confidence,
+               a.winner
+        FROM predictions p
+        LEFT JOIN actual_results a ON a.race_id = p.race_id
+        WHERE p.passed = 0
+          AND p.predicted_horse_no IS NOT NULL
+          AND p.confidence >= ?
+          {where_strategy}
+        """,
+        params,
+    ).fetchall()
+
+    total = len(rows)
+    hit = 0
+    for r in rows:
+        w = r["winner"]
+        if w is not None and int(r["decision"]) == int(w):
+            hit += 1
+
+    conn.close()
+    return {"threshold": threshold, "strategy": strategy or "ALL", "total": total, "hit": hit, "accuracy": (hit / total) if total else 0.0}
+
+
+def get_roi_by_strategy(strategy: Optional[str] = None) -> Dict[str, Any]:
+    """
+    ROI KPI: sum(profit)/sum(stake)
+    profit가 이미 채워져 있으면 그것을 사용, 없으면 winner로 계산(odds/payout 필요)
+    """
+    conn = _conn()
+    cur = conn.cursor()
+
+    params: List[Any] = []
+    where_strategy = ""
+    if strategy:
+        where_strategy = " AND p.strategy = ? "
+        params.append(strategy)
+
+    rows = cur.execute(
+        f"""
+        SELECT
+          p.race_id, p.strategy, p.predicted_horse_no, p.stake, p.odds, p.payout, p.profit,
+          a.winner
+        FROM predictions p
+        LEFT JOIN actual_results a ON a.race_id = p.race_id
+        WHERE p.passed = 0
+          AND p.predicted_horse_no IS NOT NULL
+          AND p.stake > 0
+          {where_strategy}
+        """,
+        params,
+    ).fetchall()
+
+    sum_stake = 0.0
+    sum_profit = 0.0
+    computed = 0
+
+    for r in rows:
+        stake = _safe_float(r["stake"])
+        if stake <= 0:
+            continue
+
+        profit = r["profit"]
+        if profit is None:
+            w = r["winner"]
+            if w is None:
+                continue
+
+            hit = int(r["predicted_horse_no"]) == int(w)
+            payout = r["payout"]
+            odds = r["odds"]
+
+            if hit:
+                if payout is not None:
+                    profit_val = _safe_float(payout) - stake
+                elif odds is not None:
+                    profit_val = stake * _safe_float(odds) - stake
+                else:
+                    continue
+            else:
+                profit_val = -stake
+        else:
+            profit_val = _safe_float(profit)
+
+        sum_stake += stake
+        sum_profit += profit_val
+        computed += 1
+
+    conn.close()
+
+    roi = (sum_profit / sum_stake) if sum_stake else 0.0
+    return {
+        "strategy": strategy or "ALL",
+        "bets": computed,
+        "sum_stake": sum_stake,
+        "sum_profit": sum_profit,
+        "roi": roi,
+    }
+
+def get_roi_by_strategy(strategy=None):
+    import sqlite3
+
+    conn = sqlite3.connect("races.db")
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    params = []
+    where_strategy = ""
+    if strategy:
+        where_strategy = "AND p.strategy = ?"
+        params.append(strategy)
+
+    rows = cur.execute(
+        f"""
+        SELECT
+          p.strategy,
+          p.stake,
+          p.profit,
+          p.odds,
+          p.payout,
+          p.predicted_horse_no,
+          a.winner
+        FROM predictions p
+        LEFT JOIN actual_results a
+          ON a.race_id = p.race_id
+        WHERE p.passed = 0
+          AND p.predicted_horse_no IS NOT NULL
+          AND p.stake > 0
+          {where_strategy}
+        """,
+        params,
+    ).fetchall()
+
+    sum_stake = 0.0
+    sum_profit = 0.0
+    bets = 0
+
+    for r in rows:
+        stake = float(r["stake"] or 0)
+        if stake <= 0:
+            continue
+
+        profit = r["profit"]
+        if profit is None:
+            # winner 없으면 아직 미정 → 손익 계산 안 함
+            if r["winner"] is None:
+                continue
+
+            hit = int(r["predicted_horse_no"]) == int(r["winner"])
+            if hit:
+                if r["payout"] is not None:
+                    profit_val = float(r["payout"]) - stake
+                elif r["odds"] is not None:
+                    profit_val = stake * float(r["odds"]) - stake
+                else:
+                    continue
+            else:
+                profit_val = -stake
+        else:
+            profit_val = float(profit)
+
+        sum_stake += stake
+        sum_profit += profit_val
+        bets += 1
+
+    conn.close()
+
+    roi = (sum_profit / sum_stake) if sum_stake else 0.0
+    return {
+        "strategy": strategy or "ALL",
+        "bets": bets,
+        "sum_stake": sum_stake,
+        "sum_profit": sum_profit,
+        "roi": roi,
     }
